@@ -8,9 +8,6 @@ package:
 source:
    url: https://gitlab.com/gwburst/public/library/-/archive/cWB-{{ version }}/library-cWB-{{ version }}.tar.gz
    sha256: 42c3ff466ee7dcb26fb3c0a80b8c1620c45758c71e7b8886bc7f1d6e1f892fe2
-   patches:
-     # use rootcling from build env when cross-compiling
-     - rootcling-cross.patch  # [build_platform != target_platform]
 
 build:
   run_exports:
