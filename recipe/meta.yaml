@@ -13,11 +13,11 @@ source:
      - rootcling-cross.patch  # [build_platform != target_platform]
 
 build:
-  run_exports:
-    - {{ pin_subpackage( name|lower, max_pin='x.x.x' ) }}
   error_overdepending: true
   error_overlinking: true
   number: 1
+  run_exports:
+    - {{ pin_subpackage( name|lower, max_pin='x.x.x' ) }}
   skip: true  # [not linux]
 
 requirements:
@@ -31,13 +31,13 @@ requirements:
     - sysroot_linux-64 2.17  # [linux64]
   host:
     - healpix_cxx >=3.80
-    - root_base
     - libframel
     - liblal
     - liblalinspiral
     - liblalburst
     - liblalmetaio
     - liblalsimulation
+    - root_base
   run:
     - root_base
     - tcsh
@@ -60,7 +60,7 @@ about:
   license_family: GPL
   license_file: LICENSE
   summary: "cWB pipeline library"
-  description: >
+  description: |
     Coherent network analysis is addressing the problem of detection and
     reconstruction of gravitational waves (GW) with networks of detectors.
     It has been extensively studied in the literature in application to
