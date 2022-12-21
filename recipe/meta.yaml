@@ -1,13 +1,13 @@
 {% set name = "cWB" %}
-{% set version = "6.4.2" %}
+{% set version = "6.4.2.99" %}
 
 package:
    name: "{{ name|lower }}"
    version: "{{ version }}"
 
 source:
-   url: https://gitlab.com/gwburst/public/library/-/archive/cWB-{{ version }}/library-cWB-{{ version }}.tar.gz
-   sha256: 42c3ff466ee7dcb26fb3c0a80b8c1620c45758c71e7b8886bc7f1d6e1f892fe2
+   url: https://gitlab.com/gwburst/public/library/-/archive/cWB-{{ version }}.test_conda/library-cWB-{{ version }}.test_conda.tar.gz
+   sha256: 3251158a165e3b1a9d6e6b0df616e5d4851edc21bedbc441da02a29361cf3cdb
    patches:
      # use rootcling from build env when cross-compiling
      - rootcling-cross.patch  # [build_platform != target_platform]
@@ -15,7 +15,7 @@ source:
 build:
   error_overdepending: true
   error_overlinking: true
-  number: 4
+  number: 0
   run_exports:
     - {{ pin_subpackage( name|lower, max_pin='x.x.x' ) }}
   skip: true  # [not linux]
