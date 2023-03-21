@@ -1,11 +1,11 @@
-About cwb
-=========
+About cwb-feedstock
+===================
+
+Feedstock license: [BSD-3-Clause](https://github.com/conda-forge/cwb-feedstock/blob/main/LICENSE.txt)
 
 Home: https://gitlab.com/gwburst/public/library
 
 Package license: GPL-3.0-or-later
-
-Feedstock license: [BSD-3-Clause](https://github.com/conda-forge/cwb-feedstock/blob/main/LICENSE.txt)
 
 Summary: cWB pipeline library
 
