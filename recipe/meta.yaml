@@ -7,7 +7,7 @@ package:
 
 source:
    url: https://gitlab.com/gwburst/public/library/-/archive/cWB-{{ version }}/library-cWB-{{ version }}.tar.gz
-   sha256: 18b355b34ed43e9b5aa432a7e27c42a5ac1c2e191ff5da9c3f2eb0e60c8a9c62
+   sha256: 8c9ac52792e643340499e73a8eaf8c66d73fca0a06b2baecc8d0c7f25497e090
    patches:
      # use rootcling from build env when cross-compiling
      - rootcling-cross.patch  # [build_platform != target_platform]
@@ -33,7 +33,6 @@ requirements:
     - healpix_cxx >=3.80
     - libframel
     - liblal
-    - liblalinspiral
     - liblalburst
     - liblalmetaio
     - liblalsimulation
