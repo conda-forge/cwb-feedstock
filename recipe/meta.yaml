@@ -1,13 +1,13 @@
 {% set name = "cWB" %}
-{% set version = "6.4.2.99" %}
+{% set version = "6.4.3.4" %}
 
 package:
    name: "{{ name|lower }}"
    version: "{{ version }}"
 
 source:
-   url: https://gitlab.com/gwburst/public/library/-/archive/cWB-{{ version }}.test_conda/library-cWB-{{ version }}.test_conda.tar.gz
-   sha256: 3251158a165e3b1a9d6e6b0df616e5d4851edc21bedbc441da02a29361cf3cdb
+   url: https://gitlab.com/gwburst/public/library/-/archive/cWB-{{ version }}/library-cWB-{{ version }}.tar.gz
+   sha256: 683ed43c7d2fbe29cfa3af37a9d4cfcc4bb4680c54ed50e38ddf201aa3be776a
    patches:
      # use rootcling from build env when cross-compiling
      - rootcling-cross.patch  # [build_platform != target_platform]
@@ -15,7 +15,7 @@ source:
 build:
   error_overdepending: true
   error_overlinking: true
-  number: 1
+  number: 0
   run_exports:
     - {{ pin_subpackage( name|lower, max_pin='x.x.x' ) }}
   skip: true  # [not linux]
@@ -33,7 +33,6 @@ requirements:
     - healpix_cxx >=3.80
     - libframel
     - liblal
-    - liblalinspiral
     - liblalburst
     - liblalmetaio
     - liblalsimulation
@@ -95,3 +94,4 @@ about:
 extra:
   recipe-maintainers:
     - rhyspoulton
+    - ceccozzi
