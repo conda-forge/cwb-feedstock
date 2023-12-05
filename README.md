@@ -59,10 +59,17 @@ Current build status
         <table>
           <thead><tr><th>Variant</th><th>Status</th></tr></thead>
           <tbody><tr>
-              <td>linux_64</td>
+              <td>linux_64_root_base6.28.10</td>
               <td>
                 <a href="https://dev.azure.com/conda-forge/feedstock-builds/_build/latest?definitionId=16827&branchName=main">
-                  <img src="https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/cwb-feedstock?branchName=main&jobName=linux&configuration=linux%20linux_64_" alt="variant">
+                  <img src="https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/cwb-feedstock?branchName=main&jobName=linux&configuration=linux%20linux_64_root_base6.28.10" alt="variant">
+                </a>
+              </td>
+            </tr><tr>
+              <td>linux_64_root_base6.30.2</td>
+              <td>
+                <a href="https://dev.azure.com/conda-forge/feedstock-builds/_build/latest?definitionId=16827&branchName=main">
+                  <img src="https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/cwb-feedstock?branchName=main&jobName=linux&configuration=linux%20linux_64_root_base6.30.2" alt="variant">
                 </a>
               </td>
             </tr>
