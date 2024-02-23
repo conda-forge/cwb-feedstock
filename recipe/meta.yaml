@@ -40,7 +40,8 @@ requirements:
   run:
     - root_base
     - tcsh
-
+    - uproot <=4.3.7
+    - xgboost <=1.7.6
 test:
   commands:
     # Check library
