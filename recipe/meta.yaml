@@ -1,5 +1,5 @@
 {% set name = "cWB" %}
-{% set version = "6.4.5.14" %}
+{% set version = "6.4.6.0" %}
 
 package:
   name: "{{ name|lower }}"
@@ -7,7 +7,7 @@ package:
 
 source:
   url: https://gitlab.com/gwburst/public/library/-/archive/{{ version }}/library-{{ version }}.tar.gz
-  sha256: 091d0ae4e66ac38160afc78ac6ada1908782bfae82f9e30881b2d246b332280f
+  sha256: 9dc101cb906749c5cc271b151db1db96d29cfcb6ff59e77cdb676097afc75dff
   patches:
      # use rootcling from build env when cross-compiling
     - rootcling-cross.patch   # [build_platform != target_platform]
@@ -40,7 +40,8 @@ requirements:
   run:
     - root_base
     - tcsh
-
+    - uproot <=4.3.7
+    - xgboost <=1.7.6
 test:
   commands:
     # Check library
