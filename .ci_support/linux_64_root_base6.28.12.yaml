@@ -17,7 +17,7 @@ docker_image:
 libframel:
 - '8.41'
 root_base:
-- 6.30.2
+- 6.28.12
 target_platform:
 - linux-64
 zip_keys:
