@@ -15,7 +15,7 @@ source:
 build:
   error_overdepending: true
   error_overlinking: true
-  number: 2
+  number: 3
   run_exports:
     - {{ pin_subpackage( name|lower, max_pin='x.x.x' ) }}
   skip: true  # [not linux]
@@ -39,7 +39,7 @@ requirements:
     - root_base 6.28.10
   run:
     - tcsh
-    - uproot <=4.3.7
+    - uproot
     - xgboost <=1.7.6
 test:
   commands:
