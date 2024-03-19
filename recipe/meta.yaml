@@ -38,7 +38,6 @@ requirements:
     - liblalsimulation
     - root_base 6.28.10
   run:
-    - root_base 6.28.10
     - tcsh
     - uproot <=4.3.7
     - xgboost <=1.7.6
