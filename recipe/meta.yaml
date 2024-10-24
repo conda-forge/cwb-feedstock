@@ -14,7 +14,7 @@ source:
 
 build:
   error_overlinking: true
-  number: 3
+  number: 4
   run_exports:
     - {{ pin_subpackage( name|lower, max_pin='x.x.x' ) }}
   skip: true  # [not linux]
@@ -95,4 +95,3 @@ extra:
   recipe-maintainers:
     - ceccozzi
     - duncanmmacleod
-    - rhyspoulton
