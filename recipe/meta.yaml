@@ -2,8 +2,8 @@
 {% set version = "6.4.7.0" %}
 
 package:
-  name: "{{ name|lower }}"
-  version: "{{ version }}"
+  name: {{ name|lower }}
+  version: {{ version }}
 
 source:
   url: https://gitlab.com/gwburst/public/library/-/archive/cWB-{{ version }}/library-cWB-{{ version }}.tar.gz
@@ -54,11 +54,10 @@ test:
     - root ${CWB_ROOTLOGON_FILE} -e '.q'
 
 about:
-  home: "https://gitlab.com/gwburst/public/library"
-  license: "GPL-3.0-or-later"
-  license_family: GPL
+  home: https://gitlab.com/gwburst/public/library
+  license: GPL-3.0-or-later
   license_file: LICENSE
-  summary: "cWB pipeline library"
+  summary: cWB pipeline library
   description: |
     Coherent network analysis is addressing the problem of detection and
     reconstruction of gravitational waves (GW) with networks of detectors.
