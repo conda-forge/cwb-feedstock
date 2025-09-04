@@ -12,9 +12,14 @@ source:
   url: https://gitlab.com/gwburst/public/library/-/archive/cWB-${{ version }}/library-cWB-${{ version }}.tar.gz
   sha256: 49f12d919348d5b0f405e986c0bac3c2097013afe1f6d9a0c16dd63cbd2a7ff6
   patches:
-    # use rootcling from build env when cross-compiling
-    - if: build_platform != target_platform
-      then: rootcling-cross.patch
+    # Forward-port changes from https://gitlab.com/gwburst/public/library/-/commits/public_xhtml
+    # relative to 504bc84678f78266538f94a5ff2f75e83b953e1d
+    - patches/0001-Cherry-pick-.-src-root-html-from-the-ROOT-source-to-.patch
+    - patches/0002-added-xTDocInfo-class-to-xhtml-library.patch
+    - patches/0003-add-pragma-link-C-class-xTDocDirective.patch
+    - patches/0004-added-more-xTDoc.-streamers.patch
+    - patches/0005-Minor-changes.patch
+    - patches/0006-First-implementation-of-the-xTHtml-class.patch
 
 build:
   number: 4
