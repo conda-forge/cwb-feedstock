@@ -1,0 +1,326 @@
+From a5f6823a1d3759065ea5444f23ef00af05ab18a2 Mon Sep 17 00:00:00 2001
+From: Gabriele Vedovato <Gabriele.Vedovato@lnl.infn.it>
+Date: Sat, 30 Aug 2025 08:59:36 -0700
+Subject: [PATCH 4/6] added more xTDoc... streamers
+
+---
+ tools/xhtml/xTDocDirective.cc | 54 +++++++++++++++++------------------
+ tools/xhtml/xTDocDirective.hh | 24 ++++++++--------
+ tools/xhtml/xhtml_LinkDef.h   |  3 ++
+ 3 files changed, 42 insertions(+), 39 deletions(-)
+
+diff --git a/tools/xhtml/xTDocDirective.cc b/tools/xhtml/xTDocDirective.cc
+index 745b714c..c67cdf67 100644
+--- a/tools/xhtml/xTDocDirective.cc
++++ b/tools/xhtml/xTDocDirective.cc
+@@ -32,7 +32,7 @@
+ //
+ // That way, HTML, latex, and C++ macros can be processed by xTHtml, e.g. to
+ // generate plain HTML or GIF pictures. The classes reposinsible for parsing
+-// that are TDocHtmlDirective, TDocLatexDirective, and TDocMacroDirective,
++// that are xTDocHtmlDirective, xTDocLatexDirective, and xTDocMacroDirective,
+ // respecively.
+ //
+ // Directives can have optional parameters; these are passed as paranthesis
+@@ -160,12 +160,12 @@ void xTDocDirective::SetParser(xTDocParser* parser)
+ // copy the text enclosed by the directive to the output HTML file.
+ //______________________________________________________________________________
+ 
+-ClassImp(TDocHtmlDirective);
++ClassImp(xTDocHtmlDirective);
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Add a line of HTML
+ 
+-void TDocHtmlDirective::AddLine(const TSubString& line)
++void xTDocHtmlDirective::AddLine(const TSubString& line)
+ {
+    if (line.Start() == -1) return;
+ 
+@@ -216,10 +216,10 @@ void TDocHtmlDirective::AddLine(const TSubString& line)
+ /// Set result to the HTML code that was passed in via AddLine().
+ /// Prepend a closing </pre>, append an opening <pre>
+ 
+-Bool_t TDocHtmlDirective::GetResult(TString& result)
++Bool_t xTDocHtmlDirective::GetResult(TString& result)
+ {
+-   result = "</pre><!-- TDocHtmlDirective start -->";
+-   result += fText + "<!-- TDocHtmlDirective end --><pre>";
++   result = "</pre><!-- xTDocHtmlDirective start -->";
++   result += fText + "<!-- xTDocHtmlDirective end --><pre>";
+    return kTRUE;
+ }
+ 
+@@ -239,22 +239,22 @@ Bool_t TDocHtmlDirective::GetResult(TString& result)
+ // The macro is meant to create an object that can be saved as a GIF file by
+ // calling object->SaveAs(outputfile.gif). The macro is expected to return that
+ // object as a TObject*; if it does not, gPad is used and saved. The object
+-// is deleted by TDocMacroDirective once saved.
++// is deleted by xTDocMacroDirective once saved.
+ //______________________________________________________________________________
+ 
+-ClassImp(TDocMacroDirective);
++ClassImp(xTDocMacroDirective);
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Destructor
+ 
+-TDocMacroDirective::~TDocMacroDirective()
++xTDocMacroDirective::~xTDocMacroDirective()
+ {
+    delete fMacro;
+ }
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+ 
+-void TDocMacroDirective::SubProcess(const TString& what, const TString& out) {
++void xTDocMacroDirective::SubProcess(const TString& what, const TString& out) {
+    Int_t error = TInterpreter::kNoError;
+    Long_t ret = gROOT->ProcessLine(TString(".x ") + what, &error);
+    Int_t sleepCycles = 50; // 50 = 5 seconds
+@@ -264,7 +264,7 @@ void TDocMacroDirective::SubProcess(const TString& what, const TString& out) {
+    gSystem->ProcessEvents(); // in case ret needs to handle some events first
+ 
+    if (error != TInterpreter::kNoError) {
+-      ::Error("TDocMacroDirective::HandleDirective_Macro",
++      ::Error("xTDocMacroDirective::HandleDirective_Macro",
+               "Error processing macro for %s!", out.Data());
+       return;
+    }
+@@ -287,7 +287,7 @@ void TDocMacroDirective::SubProcess(const TString& what, const TString& out) {
+    }
+ 
+    if (gDebug > 3)
+-      ::Info("TDocMacroDirective::HandleDirective_Macro",
++      ::Info("xTDocMacroDirective::HandleDirective_Macro",
+              "Saving returned %s to file %s.",
+              objRet->IsA()->GetName(), out.Data());
+ 
+@@ -321,7 +321,7 @@ void TDocMacroDirective::SubProcess(const TString& what, const TString& out) {
+ /// macro, but not shown in the source tab if the parameter
+ /// source is supplied.
+ 
+-void TDocMacroDirective::AddLine(const TSubString& line)
++void xTDocMacroDirective::AddLine(const TSubString& line)
+ {
+    if (!fMacro) {
+       TString name;
+@@ -341,7 +341,7 @@ void TDocMacroDirective::AddLine(const TSubString& line)
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Create the input file for SubProcess().
+ 
+-TString TDocMacroDirective::CreateSubprocessInputFile() {
++TString xTDocMacroDirective::CreateSubprocessInputFile() {
+    if (!fIsFilename) {
+       TString fileSysName;
+       GetName(fileSysName);
+@@ -426,7 +426,7 @@ TString TDocMacroDirective::CreateSubprocessInputFile() {
+ /// If fShowSource is set, a second tab will be created which shows
+ /// the source.
+ 
+-Bool_t TDocMacroDirective::GetResult(TString& result)
++Bool_t xTDocMacroDirective::GetResult(TString& result)
+ {
+    if (!fMacro)
+       return kFALSE;
+@@ -473,7 +473,7 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
+    if (wantBatch) {
+       invoc += "-b ";
+    }
+-   invoc += "-e 'TDocMacroDirective::SubProcess(\""
++   invoc += "-e 'xTDocMacroDirective::SubProcess(\""
+       + subProcInputFile + "\",\"" + outFileName + "\");'";
+    gSystem->Unlink(outFileName);
+    Int_t exitCode = gSystem->Exec(invoc.Data());
+@@ -549,7 +549,7 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
+ /// Setting fNeedGraphics if name is "GUI",
+ /// setting fShowSource if name is "SOURCE"
+ 
+-void TDocMacroDirective::AddParameter(const TString& name, const char* /*value=0*/)
++void xTDocMacroDirective::AddParameter(const TString& name, const char* /*value=0*/)
+ {
+    if (!name.CompareTo("gui", TString::kIgnoreCase))
+       fNeedGraphics = kTRUE;
+@@ -602,12 +602,12 @@ namespace {
+ //______________________________________________________________________________
+ 
+ 
+-ClassImp(TDocLatexDirective);
++ClassImp(xTDocLatexDirective);
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Destructor
+ 
+-TDocLatexDirective::~TDocLatexDirective()
++xTDocLatexDirective::~xTDocLatexDirective()
+ {
+    gSystem->ProcessEvents();
+    delete fLatex;
+@@ -618,7 +618,7 @@ TDocLatexDirective::~TDocLatexDirective()
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Add a latex line
+ 
+-void TDocLatexDirective::AddLine(const TSubString& line)
++void xTDocLatexDirective::AddLine(const TSubString& line)
+ {
+    if (line.Length() == 0)
+       return;
+@@ -641,7 +641,7 @@ void TDocLatexDirective::AddLine(const TSubString& line)
+ /// Create a gif file named filename from a latex expression in fLatex.
+ /// Called when "Begin_Latex"/"End_Latex" is processed.
+ 
+-void TDocLatexDirective::CreateLatex(const char* filename)
++void xTDocLatexDirective::CreateLatex(const char* filename)
+ {
+    if (!fLatex
+       || !fLatex->GetListOfLines()
+@@ -660,7 +660,7 @@ void TDocLatexDirective::CreateLatex(const char* filename)
+    if (!fBBCanvas)
+       // add magic batch vs. gui canvas sizes (4, 28)
+       fBBCanvas = (TVirtualPad*)gROOT->ProcessLineFast(
+-         Form("new TCanvas(\"R__TDocLatexDirective_BBCanvas\",\"fBBCanvas\",%g,%g);", -(canvSize + 4.), canvSize + 28.));
++         Form("new TCanvas(\"R__xTDocLatexDirective_BBCanvas\",\"fBBCanvas\",%g,%g);", -(canvSize + 4.), canvSize + 28.));
+    if (!fBBCanvas) {
+       Error("CreateLatex", "Cannot create a TCanvas via the interpreter!");
+       return;
+@@ -750,7 +750,7 @@ void TDocLatexDirective::CreateLatex(const char* filename)
+    Float_t padSizeY = totalHeight + 8.;
+    // add magic batch vs. gui canvas sizes (4, 28) + rounding
+    TVirtualPad* padImg = (TVirtualPad*)gROOT->ProcessLineFast(
+-      Form("new TCanvas(\"R__TDocLatexDirective_padImg\",\"padImg\",-(Int_t)%g,(Int_t)%g);",
++      Form("new TCanvas(\"R__xTDocLatexDirective_padImg\",\"padImg\",-(Int_t)%g,(Int_t)%g);",
+            padSizeX + 4.5, padSizeY + 28.5));
+    padImg->SetBorderMode(0);
+    padImg->SetFillColor(kWhite);
+@@ -800,7 +800,7 @@ void TDocLatexDirective::CreateLatex(const char* filename)
+ /// Determines the bounding box for text as height and width.
+ /// Assumes that we are in batch mode.
+ 
+-void TDocLatexDirective::GetBoundingBox(TLatex& latex, const char* text, Float_t& width, Float_t& height)
++void xTDocLatexDirective::GetBoundingBox(TLatex& latex, const char* text, Float_t& width, Float_t& height)
+ {
+    UInt_t uiWidth = 0;
+    UInt_t uiHeight = 0;
+@@ -815,7 +815,7 @@ void TDocLatexDirective::GetBoundingBox(TLatex& latex, const char* text, Float_t
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Get the list of lines as TObjStrings
+ 
+-TList* TDocLatexDirective::GetListOfLines() const
++TList* xTDocLatexDirective::GetListOfLines() const
+ {
+    return fLatex ? fLatex->GetListOfLines() : 0;
+ }
+@@ -825,7 +825,7 @@ TList* TDocLatexDirective::GetListOfLines() const
+ /// temporary canvas, and saving that to a filename in the output
+ /// directory.
+ 
+-Bool_t TDocLatexDirective::GetResult(TString& result)
++Bool_t xTDocLatexDirective::GetResult(TString& result)
+ {
+    TString filename;
+    GetName(filename);
+@@ -866,7 +866,7 @@ Bool_t TDocLatexDirective::GetResult(TString& result)
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Parse fParameters, setting fFontSize, fAlignment, and fSeparator
+ 
+-void TDocLatexDirective::AddParameter(const TString& name, const char* value /*=0*/)
++void xTDocLatexDirective::AddParameter(const TString& name, const char* value /*=0*/)
+ {
+    if (!name.CompareTo("fontsize", TString::kIgnoreCase)) {
+       if (!value || !value[0])
+diff --git a/tools/xhtml/xTDocDirective.hh b/tools/xhtml/xTDocDirective.hh
+index 255cacd7..c23a6524 100644
+--- a/tools/xhtml/xTDocDirective.hh
++++ b/tools/xhtml/xTDocDirective.hh
+@@ -77,22 +77,22 @@ public:
+    ClassDef(xTDocDirective, 0); // xTHtml directive handler
+ };
+ 
+-class TDocHtmlDirective: public xTDocDirective {
++class xTDocHtmlDirective: public xTDocDirective {
+ private:
+    TString fText;     // HTML text to be kept
+    Bool_t  fVerbatim; // whether we are in a <pre></pre> block
+ public:
+-   TDocHtmlDirective(): xTDocDirective("HTML"), fVerbatim(kFALSE) {}
+-   virtual ~TDocHtmlDirective() {}
++   xTDocHtmlDirective(): xTDocDirective("HTML"), fVerbatim(kFALSE) {}
++   virtual ~xTDocHtmlDirective() {}
+ 
+    virtual void AddLine(const TSubString& line);
+    virtual const char* GetEndTag() const { return "end_html"; }
+    virtual Bool_t GetResult(TString& result);
+ 
+-   ClassDef(TDocHtmlDirective, 0); // Handler for "Begin_Html"/"End_Html" for raw HTML in documentation comments
++   ClassDef(xTDocHtmlDirective, 0); // Handler for "Begin_Html"/"End_Html" for raw HTML in documentation comments
+ };
+ 
+-class TDocMacroDirective: public xTDocDirective {
++class xTDocMacroDirective: public xTDocDirective {
+ private:
+    TMacro* fMacro;         // macro to be executed
+    Bool_t  fNeedGraphics;  // if set, we cannot switch to batch mode
+@@ -103,10 +103,10 @@ private:
+    TString CreateSubprocessInputFile();
+ 
+ public:
+-   TDocMacroDirective():
++   xTDocMacroDirective():
+       xTDocDirective("MACRO"), fMacro(0), fNeedGraphics(kFALSE),
+       fShowSource(kFALSE), fIsFilename(kTRUE) {};
+-   virtual ~TDocMacroDirective();
++   virtual ~xTDocMacroDirective();
+ 
+    virtual void AddLine(const TSubString& line);
+    virtual const char* GetEndTag() const { return "end_macro"; }
+@@ -116,10 +116,10 @@ public:
+ 
+    static void SubProcess(const TString& what, const TString& out);
+ 
+-   ClassDef(TDocMacroDirective, 0); // Handler for "Begin_Macro"/"End_Macro" for code that is executed and that can generate an image for documentation
++   ClassDef(xTDocMacroDirective, 0); // Handler for "Begin_Macro"/"End_Macro" for code that is executed and that can generate an image for documentation
+ };
+ 
+-class TDocLatexDirective: public xTDocDirective {
++class xTDocLatexDirective: public xTDocDirective {
+ protected:
+    TMacro*      fLatex;       // collection of lines
+    Int_t        fFontSize;    // fontsize for current latex block, in pixels
+@@ -133,10 +133,10 @@ protected:
+    virtual void GetBoundingBox(TLatex& latex, const char* text, Float_t& width, Float_t& height);
+ 
+ public:
+-   TDocLatexDirective():
++   xTDocLatexDirective():
+       xTDocDirective("LATEX"), fLatex(0), fFontSize(16),
+       fSepIsRegexp(kFALSE), fBBCanvas(0) {};
+-   virtual ~TDocLatexDirective();
++   virtual ~xTDocLatexDirective();
+ 
+    virtual void AddLine(const TSubString& line);
+    virtual const char* GetEndTag() const {return "end_latex";}
+@@ -151,7 +151,7 @@ public:
+    // Delete output for the parser's current class or module.
+    virtual void DeleteOutput() const { DeleteOutputFiles(".gif"); }
+ 
+-   ClassDef(TDocLatexDirective, 0); // Handler for "Begin_Latex"/"End_Latex" to generate an image from latex
++   ClassDef(xTDocLatexDirective, 0); // Handler for "Begin_Latex"/"End_Latex" to generate an image from latex
+ };
+ 
+ #endif // ROOT_xTDocDirective
+diff --git a/tools/xhtml/xhtml_LinkDef.h b/tools/xhtml/xhtml_LinkDef.h
+index 9dec747a..514c04fe 100644
+--- a/tools/xhtml/xhtml_LinkDef.h
++++ b/tools/xhtml/xhtml_LinkDef.h
+@@ -23,5 +23,8 @@
+ #pragma link C++ class xTDocInfo+;
+ #pragma link C++ class xTClassDocInfo+;
+ #pragma link C++ class xTDocDirective+;
++#pragma link C++ class xTDocMacroDirective+;
++#pragma link C++ class xTDocLatexDirective+;
++#pragma link C++ class xTDocHtmlDirective+;
+ 
+ #endif // __CLING__
+-- 
+2.39.5
+

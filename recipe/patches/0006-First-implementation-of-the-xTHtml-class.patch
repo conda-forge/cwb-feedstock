@@ -1,0 +1,490 @@
+From 293d06f3fdc23a9b93da2c8a7d44c624b085240d Mon Sep 17 00:00:00 2001
+From: Francesco Salemi <francesco.salemi@uniroma1.it>
+Date: Wed, 3 Sep 2025 10:16:51 -0700
+Subject: [PATCH 6/6] First implementation of the xTHtml class
+
+---
+ tools/CMakeLists.txt             |  1 +
+ tools/cwb/CMakeLists.txt         |  5 ++--
+ tools/cwb/ced.cc                 |  2 +-
+ tools/cwb/macros/cwb_rootlogon.C |  6 +++-
+ tools/xhtml/CMakeLists.txt       | 49 ++++++++++++++++++++++++++++++++
+ tools/xhtml/xTClassDocOutput.cc  | 10 +++----
+ tools/xhtml/xTDocOutput.cc       | 30 +++++++++----------
+ tools/xhtml/xTHtml.cc            | 46 +++++++++++++++---------------
+ tools/xhtml/xTHtml.hh            |  4 +--
+ tools/xhtml/xhtml_LinkDef.h      |  2 ++
+ 10 files changed, 106 insertions(+), 49 deletions(-)
+ create mode 100644 tools/xhtml/CMakeLists.txt
+
+diff --git a/tools/CMakeLists.txt b/tools/CMakeLists.txt
+index 5beed2da..0306fa9f 100644
+--- a/tools/CMakeLists.txt
++++ b/tools/CMakeLists.txt
+@@ -9,3 +9,4 @@ add_subdirectory(cwb)
+ add_subdirectory(frdisplay)
+ add_subdirectory(wdmutils)
+ add_subdirectory(online)
++add_subdirectory(xhtml)
+diff --git a/tools/cwb/CMakeLists.txt b/tools/cwb/CMakeLists.txt
+index 014d1838..504b7243 100644
+--- a/tools/cwb/CMakeLists.txt
++++ b/tools/cwb/CMakeLists.txt
+@@ -36,6 +36,7 @@ list(APPEND CWB_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR}/../stft
+                              ${CMAKE_CURRENT_LIST_DIR}/../history
+                              ${CMAKE_CURRENT_LIST_DIR}/../gwat
+                              ${CMAKE_CURRENT_LIST_DIR}/../frame
++                             ${CMAKE_CURRENT_LIST_DIR}/../xhtml
+                              ${CMAKE_CURRENT_LIST_DIR}/plugins)
+ 
+ #Configure the files from the varibles already set
+@@ -74,9 +75,9 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC ${CWB_DEFS})
+ 
+ #Link to the dependencies
+ if(${LAL_FOUND})
+-    target_link_libraries(${PROJECT_NAME} PUBLIC WAT TOOLBOX STFT GWAT HISTORY FRAME ROOT::Core ROOT::Html PkgConfig::LAL PkgConfig::CWBDEPS ${HEALPIX_LIBRARIES})
++    target_link_libraries(${PROJECT_NAME} PUBLIC WAT TOOLBOX STFT GWAT HISTORY FRAME ROOT::Core XHTML PkgConfig::LAL PkgConfig::CWBDEPS ${HEALPIX_LIBRARIES})
+ else()
+-    target_link_libraries(${PROJECT_NAME} PUBLIC WAT TOOLBOX STFT GWAT HISTORY FRAME ROOT::Core ROOT::Html PkgConfig::CWBDEPS ${HEALPIX_LIBRARIES})
++    target_link_libraries(${PROJECT_NAME} PUBLIC WAT TOOLBOX STFT GWAT HISTORY FRAME ROOT::Core XHTML PkgConfig::CWBDEPS ${HEALPIX_LIBRARIES})
+ endif()
+ 
+ #Generate the root dictionary
+diff --git a/tools/cwb/ced.cc b/tools/cwb/ced.cc
+index a1556e69..e50e65be 100644
+--- a/tools/cwb/ced.cc
++++ b/tools/cwb/ced.cc
+@@ -21,7 +21,7 @@
+ #include "wseries.hh"
+ 
+ #include "xTHtml.hh"
+-#include "TDocOutput.h"
++#include "xTDocOutput.hh"
+ #include "TH2.h"
+ #include "TStyle.h"
+ #include "TCanvas.h"
+diff --git a/tools/cwb/macros/cwb_rootlogon.C b/tools/cwb/macros/cwb_rootlogon.C
+index 91a95294..dc5ca35f 100644
+--- a/tools/cwb/macros/cwb_rootlogon.C
++++ b/tools/cwb/macros/cwb_rootlogon.C
+@@ -310,7 +310,11 @@
+   lib_path = wat_install+"/lib/wavegraph.so";
+   printf("Loading wavegraph     : %s ...\n",lib_path.Data());
+   if(gSystem->Load(lib_path)<0) libSTAT=false;
+-
++  // xTHtml library
++  lib_path = wat_install+"/lib/xTHtlm.so";
++  printf("Loading xTHtml     : %s ...\n",lib_path.Data());
++  if(gSystem->Load(lib_path)<0) libSTAT=false;
++   
+   // declare ACLiC includes environment 
+   gSystem->AddIncludePath("-I$HOME_WAT_INSTALL/inc");
+   gSystem->AddIncludePath("-I$ROOTSYS/include");
+diff --git a/tools/xhtml/CMakeLists.txt b/tools/xhtml/CMakeLists.txt
+new file mode 100644
+index 00000000..51f4db34
+--- /dev/null
++++ b/tools/xhtml/CMakeLists.txt
+@@ -0,0 +1,49 @@
++project(
++    XHTML
++    LANGUAGES CXX
++)
++
++#Include the master CMakeLists.txt
++include_directories(${CMAKE_CURRENT_SOURCE_DIR})
++
++set(XHTML_SRC xTClassDocOutput.cc xTDocDirective.cc xTDocInfo.cc xTDocOutput.cc xTDocParser.cc xTHtml.cc)
++
++#Get all the header files
++string(REGEX REPLACE "[.]cc" ".hh" XHTML_HDRS "${XHTML_SRC}")
++
++#list(APPEND XHTML_HDRS xTHtml.hh)
++
++#Make a local copy of the CWB_OPTS
++set(XHTML_OPTS ${CWB_OPTS})
++
++#Make a local copy of the CWB_INCLUDE_DIRS
++set(XHTML_INCLUDE_DIRS ${CWB_INCLUDE_DIRS})
++
++#Append the stft directory
++#list(APPEND XHTML_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR}/../stft)
++
++#Create the library
++add_library(${PROJECT_NAME} SHARED ${XHTML_SRC})
++
++#Set the target properties
++set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
++set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "xTHtml")
++set_target_properties(${PROJECT_NAME} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
++
++#target_link_libraries(${PROJECT_NAME} PUBLIC xHtml)
++
++#Generate the root dictionary
++ROOT_GENERATE_DICTIONARY(xTHtml_dict ${XHTML_HDRS}
++    LINKDEF xhtml_LinkDef.h
++    MODULE ${PROJECT_NAME})
++
++#Add all the include directories to the target
++target_include_directories(${PROJECT_NAME} PRIVATE ${XHTML_INCLUDE_DIRS})
++
++target_link_libraries(${PROJECT_NAME} PUBLIC ROOT::Core)
++
++install(TARGETS ${PROJECT_NAME})
++#install(FILES ${XHTML_HDRS}
++#        TYPE INCLUDE)
++#install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}_rdict.pcm
++#        TYPE LIB)
+diff --git a/tools/xhtml/xTClassDocOutput.cc b/tools/xhtml/xTClassDocOutput.cc
+index 67e0570f..4d333172 100644
+--- a/tools/xhtml/xTClassDocOutput.cc
++++ b/tools/xhtml/xTClassDocOutput.cc
+@@ -16,7 +16,7 @@
+ #include "TDataMember.h"
+ #include "TMethodArg.h"
+ #include "TDataType.h"
+-#include "TDocInfo.h"
++#include "xTDocInfo.hh"
+ #include "xTDocParser.hh"
+ #include "TEnv.h"
+ #include "TError.h"
+@@ -1112,9 +1112,9 @@ Bool_t xTClassDocOutput::CreateHierarchyDot()
+           << "rankdir=RL;" << std::endl;
+ 
+    // loop on all classes
+-   TClassDocInfo* cdi = 0;
++   xTClassDocInfo* cdi = 0;
+    TIter iClass(fHtml->GetListOfClasses());
+-   while ((cdi = (TClassDocInfo*)iClass())) {
++   while ((cdi = (xTClassDocInfo*)iClass())) {
+ 
+       TDictionary *dict = cdi->GetClass();
+       TClass *cl = dynamic_cast<TClass*>(dict);
+@@ -1217,9 +1217,9 @@ void xTClassDocOutput::DescendHierarchy(std::ostream& out, TClass* basePtr, Int_
+ 
+    UInt_t numClasses = 0;
+ 
+-   TClassDocInfo* cdi = 0;
++   xTClassDocInfo* cdi = 0;
+    TIter iClass(fHtml->GetListOfClasses());
+-   while ((cdi = (TClassDocInfo*)iClass()) && (!maxLines || fHierarchyLines<maxLines)) {
++   while ((cdi = (xTClassDocInfo*)iClass()) && (!maxLines || fHierarchyLines<maxLines)) {
+ 
+       TClass *classPtr = dynamic_cast<TClass*>(cdi->GetClass());
+       if (!classPtr) continue;
+diff --git a/tools/xhtml/xTDocOutput.cc b/tools/xhtml/xTDocOutput.cc
+index f65b5061..62554074 100644
+--- a/tools/xhtml/xTDocOutput.cc
++++ b/tools/xhtml/xTDocOutput.cc
+@@ -16,7 +16,7 @@
+ #include "TClassEdit.h"
+ #include "TDataMember.h"
+ #include "TDataType.h"
+-#include "TDocInfo.h"
++#include "xTDocInfo.hh"
+ #include "xTDocParser.hh"
+ #include "TEnv.h"
+ #include "TGlobal.h"
+@@ -664,9 +664,9 @@ void xTDocOutput::CreateHierarchy()
+ 
+ 
+    // loop on all classes
+-   TClassDocInfo* cdi = 0;
++   xTClassDocInfo* cdi = 0;
+    TIter iClass(fHtml->GetListOfClasses());
+-   while ((cdi = (TClassDocInfo*)iClass())) {
++   while ((cdi = (xTClassDocInfo*)iClass())) {
+       if (!cdi->HaveSource())
+          continue;
+ 
+@@ -723,8 +723,8 @@ void xTDocOutput::CreateClassIndex()
+       std::vector<std::string> classNames;
+       {
+          TIter iClass(fHtml->GetListOfClasses());
+-         TClassDocInfo* cdi = 0;
+-         while ((cdi = (TClassDocInfo*)iClass()))
++         xTClassDocInfo* cdi = 0;
++         while ((cdi = (xTClassDocInfo*)iClass()))
+             if (cdi->IsSelected() && cdi->HaveSource())
+                classNames.push_back(cdi->GetName());
+       }
+@@ -747,9 +747,9 @@ void xTDocOutput::CreateClassIndex()
+    // loop on all classes
+    UInt_t currentIndexEntry = 0;
+    TIter iClass(fHtml->GetListOfClasses());
+-   TClassDocInfo* cdi = 0;
++   xTClassDocInfo* cdi = 0;
+    Int_t i = 0;
+-   while ((cdi = (TClassDocInfo*)iClass())) {
++   while ((cdi = (xTClassDocInfo*)iClass())) {
+       if (!cdi->IsSelected() || !cdi->HaveSource())
+          continue;
+ 
+@@ -863,8 +863,8 @@ void xTDocOutput::CreateModuleIndex()
+       std::list<std::string> classNames;
+       {
+          TIter iClass(module->GetClasses());
+-         TClassDocInfo* cdi = 0;
+-         while ((cdi = (TClassDocInfo*) iClass())) {
++         xTClassDocInfo* cdi = 0;
++         while ((cdi = (xTClassDocInfo*) iClass())) {
+             if (!cdi->IsSelected() || !cdi->HaveSource())
+                continue;
+             classNames.push_back(cdi->GetName());
+@@ -923,10 +923,10 @@ void xTDocOutput::CreateModuleIndex()
+       } // just a scope block
+ 
+       TIter iClass(module->GetClasses());
+-      TClassDocInfo* cdi = 0;
++      xTClassDocInfo* cdi = 0;
+       UInt_t count = 0;
+       UInt_t currentIndexEntry = 0;
+-      while ((cdi = (TClassDocInfo*) iClass())) {
++      while ((cdi = (xTClassDocInfo*) iClass())) {
+          if (!cdi->IsSelected() || !cdi->HaveSource())
+             continue;
+ 
+@@ -1173,8 +1173,8 @@ void xTDocOutput::CreateClassTypeDefs()
+    xTDocParser parser(*this);
+ 
+    TIter iClass(GetHtml()->GetListOfClasses());
+-   TClassDocInfo* cdi = 0;
+-   while ((cdi = (TClassDocInfo*) iClass())) {
++   xTClassDocInfo* cdi = 0;
++   while ((cdi = (xTClassDocInfo*) iClass())) {
+       if (cdi->GetListOfTypedefs().IsEmpty())
+          continue;
+       TIter iTypedefs(&cdi->GetListOfTypedefs());
+@@ -1871,14 +1871,14 @@ void xTDocOutput::ReferenceEntity(TSubString& str, TDataType* entity, const char
+    NameSpace2FileName(mangledEntity);
+ 
+    TString link;
+-   TClassDocInfo* cdi = 0;
++   xTClassDocInfo* cdi = 0;
+    bool isClassTypedef = entity->GetType() == -1;
+    if (isClassTypedef)
+       /* is class/ struct / union */
+       isClassTypedef = isClassTypedef && (entity->Property() & 7);
+    if (isClassTypedef) {
+       std::string shortTypeName(fHtml->ShortType(entity->GetFullTypeName()));
+-      cdi = (TClassDocInfo*) GetHtml()->GetListOfClasses()->FindObject(shortTypeName.c_str());
++      cdi = (xTClassDocInfo*) GetHtml()->GetListOfClasses()->FindObject(shortTypeName.c_str());
+    }
+    if (cdi) {
+       link = mangledEntity + ".html";
+diff --git a/tools/xhtml/xTHtml.cc b/tools/xhtml/xTHtml.cc
+index 806594de..4d28a2ae 100644
+--- a/tools/xhtml/xTHtml.cc
++++ b/tools/xhtml/xTHtml.cc
+@@ -18,7 +18,7 @@
+ #include "TClassEdit.h"
+ #include "TClassTable.h"
+ #include "TDataType.h"
+-#include "TDocInfo.h"
++#include "xTDocInfo.hh"
+ #include "xTDocOutput.hh"
+ #include "TEnv.h"
+ #include "TInterpreter.h"
+@@ -1358,14 +1358,14 @@ const char* xTHtml::GetEtcDir() const
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Return the next class to be generated for MakeClassThreaded.
+ 
+-TClassDocInfo *xTHtml::GetNextClass()
++xTClassDocInfo *xTHtml::GetNextClass()
+ {
+    if (!fThreadedClassIter) return 0;
+ 
+    R__LOCKGUARD(GetMakeClassMutex());
+ 
+-   TClassDocInfo* classinfo = 0;
+-   while ((classinfo = (TClassDocInfo*)(*fThreadedClassIter)())
++   xTClassDocInfo* classinfo = 0;
++   while ((classinfo = (xTClassDocInfo*)(*fThreadedClassIter)())
+           && !classinfo->IsSelected()) { }
+ 
+    if (!classinfo) {
+@@ -1532,7 +1532,7 @@ void  xTHtml::GetModuleNameForClass(TString& module, TClass* cl) const
+    module = "(UNKNOWN)";
+    if (!cl) return;
+ 
+-   TClassDocInfo* cdi = (TClassDocInfo*)fDocEntityInfo.fClasses.FindObject(cl->GetName());
++   xTClassDocInfo* cdi = (xTClassDocInfo*)fDocEntityInfo.fClasses.FindObject(cl->GetName());
+    if (!cdi || !cdi->GetModule())
+       return;
+    module = cdi->GetModule()->GetName();
+@@ -1610,7 +1610,7 @@ void xTHtml::CreateListOfClasses(const char* filter)
+       TString htmlfilename;
+       TFileSysEntry* fse = 0;
+ 
+-      TClassDocInfo* cdi = (TClassDocInfo*) fDocEntityInfo.fClasses.FindObject(cname);
++      xTClassDocInfo* cdi = (xTClassDocInfo*) fDocEntityInfo.fClasses.FindObject(cname);
+       if (cdi) {
+          hdr = cdi->GetDeclFileName();
+          hdrFS = cdi->GetDeclFileSysName();
+@@ -1723,7 +1723,7 @@ void xTHtml::CreateListOfClasses(const char* filter)
+          GetHtmlFileName(classPtr, htmlfilename);
+ 
+       if (!cdi) {
+-         cdi = new TClassDocInfo(classPtr, htmlfilename, hdrFS, srcFS, hdr, src);
++         cdi = new xTClassDocInfo(classPtr, htmlfilename, hdrFS, srcFS, hdr, src);
+          fDocEntityInfo.fClasses.Add(cdi);
+       } else {
+          cdi->SetDeclFileName(hdr);
+@@ -1825,7 +1825,7 @@ void xTHtml::CreateListOfClasses(const char* filter)
+    xTDocOutput output(*this);
+    while ((dt = (TDataType*) iTypedef())) {
+       if (dt->GetType() != -1) continue;
+-      TClassDocInfo* cdi = (TClassDocInfo*) fDocEntityInfo.fClasses.FindObject(dt->GetFullTypeName());
++      xTClassDocInfo* cdi = (xTClassDocInfo*) fDocEntityInfo.fClasses.FindObject(dt->GetFullTypeName());
+       if (cdi) {
+          cdi->GetListOfTypedefs().Add(dt);
+          if (gDebug > 1)
+@@ -1848,7 +1848,7 @@ void xTHtml::CreateListOfClasses(const char* filter)
+             TString htmlfilename(dt->GetName());
+             output.NameSpace2FileName(htmlfilename);
+             htmlfilename += ".html";
+-            TClassDocInfo* cdiTD = new TClassDocInfo(dt, htmlfilename);
++            xTClassDocInfo* cdiTD = new xTClassDocInfo(dt, htmlfilename);
+             cdiTD->SetModule(cdi->GetModule());
+             cdiTD->SetSelected(cdi->IsSelected());
+             cdi->GetModule()->AddClass(cdiTD);
+@@ -1954,8 +1954,8 @@ void xTHtml::CreateStyleSheet() const {
+ void xTHtml::GetDerivedClasses(TClass* cl, std::map<TClass*, Int_t>& derived) const
+ {
+    TIter iClass(&fDocEntityInfo.fClasses);
+-   TClassDocInfo* cdi = 0;
+-   while ((cdi = (TClassDocInfo*) iClass())) {
++   xTClassDocInfo* cdi = 0;
++   while ((cdi = (xTClassDocInfo*) iClass())) {
+       TClass* candidate = dynamic_cast<TClass*>(cdi->GetClass());
+       if (!candidate) continue;
+       if (candidate != cl && candidate->InheritsFrom(cl)) {
+@@ -2054,7 +2054,7 @@ void xTHtml::GetHtmlFileName(TClass * classPtr, TString& filename) const
+ 
+ const char* xTHtml::GetHtmlFileName(const char* classname) const
+ {
+-   TClassDocInfo* cdi = (TClassDocInfo*) fDocEntityInfo.fClasses.FindObject(classname);
++   xTClassDocInfo* cdi = (xTClassDocInfo*) fDocEntityInfo.fClasses.FindObject(classname);
+    if (cdi)
+       return cdi->GetHtmlFileName();
+    return 0;
+@@ -2075,7 +2075,7 @@ TClass *xTHtml::GetClass(const char *name1) const
+       if (ret) return 0;
+    }
+ 
+-   TClassDocInfo* cdi = (TClassDocInfo*)fDocEntityInfo.fClasses.FindObject(name1);
++   xTClassDocInfo* cdi = (xTClassDocInfo*)fDocEntityInfo.fClasses.FindObject(name1);
+    if (!cdi) return 0;
+    TClass *cl = dynamic_cast<TClass*>(cdi->GetClass());
+    // hack to get rid of prec_stl types
+@@ -2117,7 +2117,7 @@ bool xTHtml::GetDeclImplFileName(TClass * cl, bool filesys, bool decl, TString&
+    out_name = "";
+ 
+    R__LOCKGUARD(GetMakeClassMutex());
+-   TClassDocInfo* cdi = (TClassDocInfo*) fDocEntityInfo.fClasses.FindObject(cl->GetName());
++   xTClassDocInfo* cdi = (xTClassDocInfo*) fDocEntityInfo.fClasses.FindObject(cl->GetName());
+    // whether we need to determine the fil name
+    bool determine = (!cdi); // no cdi
+    if (!determine) determine |=  decl &&  filesys && !cdi->GetDeclFileSysName()[0];
+@@ -2221,11 +2221,11 @@ void xTHtml::MakeAll(Bool_t force, const char *filter, int numthreads /*= -1*/)
+ 
+    if (numthreads == 1) {
+       // CreateListOfClasses(filter); already done by MakeIndex
+-      TClassDocInfo* classinfo = 0;
++      xTClassDocInfo* classinfo = 0;
+       TIter iClassInfo(&fDocEntityInfo.fClasses);
+       UInt_t count = 0;
+ 
+-      while ((classinfo = (TClassDocInfo*)iClassInfo())) {
++      while ((classinfo = (xTClassDocInfo*)iClassInfo())) {
+          if (!classinfo->IsSelected())
+             continue;
+          fCounter.Form("%5d", fDocEntityInfo.fClasses.GetSize() - count++);
+@@ -2285,7 +2285,7 @@ void xTHtml::MakeClass(const char *className, Bool_t force)
+ {
+    CreateListOfClasses("*");
+ 
+-   TClassDocInfo* cdi = (TClassDocInfo*)fDocEntityInfo.fClasses.FindObject(className);
++   xTClassDocInfo* cdi = (xTClassDocInfo*)fDocEntityInfo.fClasses.FindObject(className);
+    if (!cdi) {
+       if (!TClassEdit::IsStdClass(className)) // stl classes won't be available, so no warning
+          Error("MakeClass", "Unknown class '%s'!", className);
+@@ -2307,7 +2307,7 @@ void xTHtml::MakeClass(void *cdi_void, Bool_t force)
+    if (!fDocEntityInfo.fClasses.GetSize())
+       CreateListOfClasses("*");
+ 
+-   TClassDocInfo* cdi = (TClassDocInfo*) cdi_void;
++   xTClassDocInfo* cdi = (xTClassDocInfo*) cdi_void;
+    TClass* currentClass = dynamic_cast<TClass*>(cdi->GetClass());
+ 
+    if (!currentClass) {
+@@ -2345,7 +2345,7 @@ void xTHtml::MakeClass(void *cdi_void, Bool_t force)
+ void* xTHtml::MakeClassThreaded(void* info) {
+    const xTHtmlThreadInfo* hti = (const xTHtmlThreadInfo*)info;
+    if (!hti) return 0;
+-   TClassDocInfo* classinfo = 0;
++   xTClassDocInfo* classinfo = 0;
+    while ((classinfo = hti->GetHtml()->GetNextClass()))
+       hti->GetHtml()->MakeClass(classinfo, hti->GetForce());
+ 
+@@ -2485,9 +2485,9 @@ void xTHtml::SetOutputDir(const char *dir)
+ 
+ void xTHtml::SetDeclFileName(TClass* cl, const char* filename)
+ {
+-   TClassDocInfo* cdi = (TClassDocInfo*) fDocEntityInfo.fClasses.FindObject(cl->GetName());
++   xTClassDocInfo* cdi = (xTClassDocInfo*) fDocEntityInfo.fClasses.FindObject(cl->GetName());
+    if (!cdi) {
+-      cdi = new TClassDocInfo(cl, "" /*html*/, "" /*fsdecl*/, "" /*fsimpl*/, filename);
++      cdi = new xTClassDocInfo(cl, "" /*html*/, "" /*fsdecl*/, "" /*fsimpl*/, filename);
+       fDocEntityInfo.fClasses.Add(cdi);
+    } else
+       cdi->SetDeclFileName(filename);
+@@ -2498,9 +2498,9 @@ void xTHtml::SetDeclFileName(TClass* cl, const char* filename)
+ 
+ void xTHtml::SetImplFileName(TClass* cl, const char* filename)
+ {
+-   TClassDocInfo* cdi = (TClassDocInfo*) fDocEntityInfo.fClasses.FindObject(cl->GetName());
++   xTClassDocInfo* cdi = (xTClassDocInfo*) fDocEntityInfo.fClasses.FindObject(cl->GetName());
+    if (!cdi) {
+-      cdi = new TClassDocInfo(cl, "" /*html*/, "" /*fsdecl*/, "" /*fsimpl*/, 0 /*decl*/, filename);
++      cdi = new xTClassDocInfo(cl, "" /*html*/, "" /*fsdecl*/, "" /*fsimpl*/, 0 /*decl*/, filename);
+       fDocEntityInfo.fClasses.Add(cdi);
+    } else
+       cdi->SetImplFileName(filename);
+diff --git a/tools/xhtml/xTHtml.hh b/tools/xhtml/xTHtml.hh
+index b8ed840b..8be96406 100644
+--- a/tools/xhtml/xTHtml.hh
++++ b/tools/xhtml/xTHtml.hh
+@@ -33,7 +33,7 @@
+ #include <map>
+ 
+ class TClass;
+-class TClassDocInfo;
++class xTClassDocInfo;
+ class TGClient;
+ class TVirtualMutex;
+ 
+@@ -399,7 +399,7 @@ protected:
+    void            CreateListOfClasses(const char* filter);
+    virtual bool    GetDeclImplFileName(TClass* cl, bool filesys, bool decl, TString& out_name) const;
+    void            MakeClass(void* cdi, Bool_t force=kFALSE);
+-   TClassDocInfo  *GetNextClass();
++   xTClassDocInfo  *GetNextClass();
+    void            SetLocalFiles() const;
+ 
+    static void    *MakeClassThreaded(void* info);
+diff --git a/tools/xhtml/xhtml_LinkDef.h b/tools/xhtml/xhtml_LinkDef.h
+index 514c04fe..9f4f3e68 100644
+--- a/tools/xhtml/xhtml_LinkDef.h
++++ b/tools/xhtml/xhtml_LinkDef.h
+@@ -26,5 +26,7 @@
+ #pragma link C++ class xTDocMacroDirective+;
+ #pragma link C++ class xTDocLatexDirective+;
+ #pragma link C++ class xTDocHtmlDirective+;
++#pragma link C++ class TModuleDocInfo;
++#pragma link C++ class TLibraryDocInfo;
+ 
+ #endif // __CLING__
+-- 
+2.39.5
+
