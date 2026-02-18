@@ -1,7 +1,7 @@
-From 293d06f3fdc23a9b93da2c8a7d44c624b085240d Mon Sep 17 00:00:00 2001
+From 6ac79029b021764ff284ba238925af53715ec55f Mon Sep 17 00:00:00 2001
 From: Francesco Salemi <francesco.salemi@uniroma1.it>
 Date: Wed, 3 Sep 2025 10:16:51 -0700
-Subject: [PATCH 6/6] First implementation of the xTHtml class
+Subject: [PATCH 6/7] First implementation of the xTHtml class
 
 ---
  tools/CMakeLists.txt             |  1 +

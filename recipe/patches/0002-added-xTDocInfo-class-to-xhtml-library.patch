@@ -1,7 +1,7 @@
-From ed4733520eac98de87dc6e084523fec6fc84b877 Mon Sep 17 00:00:00 2001
+From ee8f1159ffceea85375f13c53b88c11087f5dc7a Mon Sep 17 00:00:00 2001
 From: Gabriele Vedovato <Gabriele.Vedovato@lnl.infn.it>
 Date: Fri, 29 Aug 2025 10:38:27 -0700
-Subject: [PATCH 2/6] added xTDocInfo class to xhtml library
+Subject: [PATCH 2/7] added xTDocInfo class to xhtml library
 
 ---
  tools/xhtml/Makefile        |   2 +-

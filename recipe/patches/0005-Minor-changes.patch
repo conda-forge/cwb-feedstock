@@ -1,14 +1,14 @@
-From 9639902926dd012fae0c3043b4c76df65748850b Mon Sep 17 00:00:00 2001
+From bed91c7b60879504f504ea5f007b9e9fa68f7366 Mon Sep 17 00:00:00 2001
 From: Francesco Salemi <francesco.salemi@uniroma1.it>
 Date: Sat, 30 Aug 2025 09:02:03 -0700
-Subject: [PATCH 5/6] Minor changes
+Subject: [PATCH 5/7] Minor changes
 
 ---
  tools/xhtml/xTDocDirective.cc | 12 ++++++------
  1 file changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/tools/xhtml/xTDocDirective.cc b/tools/xhtml/xTDocDirective.cc
-index 745b714c..f1b0e800 100644
+index c67cdf67..342dffce 100644
 --- a/tools/xhtml/xTDocDirective.cc
 +++ b/tools/xhtml/xTDocDirective.cc
 @@ -2,7 +2,7 @@
@@ -20,7 +20,7 @@ index 745b714c..f1b0e800 100644
  #include "xTDocOutput.hh"
  #include "xTDocParser.hh"
  #include "TError.h"
-@@ -294,14 +294,14 @@ void TDocMacroDirective::SubProcess(const TString& what, const TString& out) {
+@@ -294,14 +294,14 @@ void xTDocMacroDirective::SubProcess(const TString& what, const TString& out) {
     if (!gROOT->IsBatch()) {
        // to get X11 to sync :-( gVirtualX->Update()/Sync() don't do it
        gSystem->Sleep(1000);
@@ -39,7 +39,7 @@ index 745b714c..f1b0e800 100644
     }
  
     objRet->SaveAs(out);
-@@ -505,7 +505,7 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
+@@ -505,7 +505,7 @@ Bool_t xTDocMacroDirective::GetResult(TString& result)
  
        xTDocParser *dparser = 0;
        if (GetDocParser()->GetCurrentClass())
