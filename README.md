@@ -9,6 +9,8 @@ Package license: GPL-3.0-or-later
 
 Summary: cWB pipeline library
 
+Development: https://gitlab.com/gwburst/public/library
+
 Coherent network analysis is addressing the problem of detection and
 reconstruction of gravitational waves (GW) with networks of detectors.
 It has been extensively studied in the literature in application to
@@ -40,7 +42,6 @@ network correlation coefficient can be constructed to distinguish
 genuine GW signals from the environmental and instrumental artifacts.
 Finally, the source coordinates of the GW waveforms can be reconstructed.
 
-
 Current build status
 ====================
 
@@ -59,17 +60,24 @@ Current build status
         <table>
           <thead><tr><th>Variant</th><th>Status</th></tr></thead>
           <tbody><tr>
-              <td>linux_64_root_base6.36.8</td>
+              <td>linux_64_root_base6.36.8root_cxx_standard20</td>
               <td>
                 <a href="https://dev.azure.com/conda-forge/feedstock-builds/_build/latest?definitionId=16827&branchName=main">
-                  <img src="https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/cwb-feedstock?branchName=main&jobName=linux&configuration=linux%20linux_64_root_base6.36.8" alt="variant">
+                  <img src="https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/cwb-feedstock?branchName=main&jobName=linux&configuration=linux%20linux_64_root_base6.36.8root_cxx_standard20" alt="variant">
                 </a>
               </td>
             </tr><tr>
-              <td>linux_64_root_base6.38.0</td>
+              <td>linux_64_root_base6.38.0root_cxx_standard20</td>
               <td>
                 <a href="https://dev.azure.com/conda-forge/feedstock-builds/_build/latest?definitionId=16827&branchName=main">
-                  <img src="https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/cwb-feedstock?branchName=main&jobName=linux&configuration=linux%20linux_64_root_base6.38.0" alt="variant">
+                  <img src="https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/cwb-feedstock?branchName=main&jobName=linux&configuration=linux%20linux_64_root_base6.38.0root_cxx_standard20" alt="variant">
+                </a>
+              </td>
+            </tr><tr>
+              <td>linux_64_root_base6.38.0root_cxx_standard23</td>
+              <td>
+                <a href="https://dev.azure.com/conda-forge/feedstock-builds/_build/latest?definitionId=16827&branchName=main">
+                  <img src="https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/cwb-feedstock?branchName=main&jobName=linux&configuration=linux%20linux_64_root_base6.38.0root_cxx_standard23" alt="variant">
                 </a>
               </td>
             </tr>
