@@ -12,6 +12,8 @@ source:
   url: https://gitlab.com/gwburst/public/library/-/archive/cWB-${{ version }}/library-cWB-${{ version }}.tar.gz
   sha256: 49f12d919348d5b0f405e986c0bac3c2097013afe1f6d9a0c16dd63cbd2a7ff6
   patches:
+    # ROOT removed the Html library in 6.36; cWB doesn't actually use it
+    - remove-root-html.patch
     # use rootcling from build env when cross-compiling
     - if: build_platform != target_platform
       then: rootcling-cross.patch

@@ -1,0 +1,20 @@
+Remove unused ROOT::Html dependency
+
+ROOT removed the Html library in 6.36. The cWB source code does not
+actually use THtml or any other class from it, so the link was
+unnecessary.
+
+--- a/tools/cwb/CMakeLists.txt
++++ b/tools/cwb/CMakeLists.txt
+@@ -74,9 +74,9 @@
+
+ #Link to the dependencies
+ if(${LAL_FOUND})
+-    target_link_libraries(${PROJECT_NAME} PUBLIC WAT TOOLBOX STFT GWAT HISTORY FRAME ROOT::Core ROOT::Html PkgConfig::LAL PkgConfig::CWBDEPS ${HEALPIX_LIBRARIES})
++    target_link_libraries(${PROJECT_NAME} PUBLIC WAT TOOLBOX STFT GWAT HISTORY FRAME ROOT::Core PkgConfig::LAL PkgConfig::CWBDEPS ${HEALPIX_LIBRARIES})
+ else()
+-    target_link_libraries(${PROJECT_NAME} PUBLIC WAT TOOLBOX STFT GWAT HISTORY FRAME ROOT::Core ROOT::Html PkgConfig::CWBDEPS ${HEALPIX_LIBRARIES})
++    target_link_libraries(${PROJECT_NAME} PUBLIC WAT TOOLBOX STFT GWAT HISTORY FRAME ROOT::Core PkgConfig::CWBDEPS ${HEALPIX_LIBRARIES})
+ endif()
+
+ #Generate the root dictionary
