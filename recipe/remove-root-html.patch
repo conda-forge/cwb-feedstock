@@ -1,20 +1,60 @@
-Remove unused ROOT::Html dependency
+Remove ROOT::Html dependency (removed from ROOT in 6.36)
 
-ROOT removed the Html library in 6.36. The cWB source code does not
-actually use THtml or any other class from it, so the link was
-unnecessary.
+THtml was used in ced.cc to convert macro source files to HTML for CED.
+Guard the usage with a ROOT version check so it still works with older
+ROOT but compiles without Html on >= 6.36.
 
 --- a/tools/cwb/CMakeLists.txt
 +++ b/tools/cwb/CMakeLists.txt
-@@ -74,9 +74,9 @@
+@@ -73,10 +73,17 @@
+ #Add the extra compile definitions
+ target_compile_definitions(${PROJECT_NAME} PUBLIC ${CWB_DEFS})
 
++# ROOT removed the Html library in 6.36
++if(TARGET ROOT::Html)
++    set(_CWB_HTML_LIB ROOT::Html)
++    target_compile_definitions(${PROJECT_NAME} PRIVATE CWB_HAS_ROOT_HTML)
++else()
++    set(_CWB_HTML_LIB)
++endif()
  #Link to the dependencies
  if(${LAL_FOUND})
 -    target_link_libraries(${PROJECT_NAME} PUBLIC WAT TOOLBOX STFT GWAT HISTORY FRAME ROOT::Core ROOT::Html PkgConfig::LAL PkgConfig::CWBDEPS ${HEALPIX_LIBRARIES})
-+    target_link_libraries(${PROJECT_NAME} PUBLIC WAT TOOLBOX STFT GWAT HISTORY FRAME ROOT::Core PkgConfig::LAL PkgConfig::CWBDEPS ${HEALPIX_LIBRARIES})
++    target_link_libraries(${PROJECT_NAME} PUBLIC WAT TOOLBOX STFT GWAT HISTORY FRAME ROOT::Core ${_CWB_HTML_LIB} PkgConfig::LAL PkgConfig::CWBDEPS ${HEALPIX_LIBRARIES})
  else()
 -    target_link_libraries(${PROJECT_NAME} PUBLIC WAT TOOLBOX STFT GWAT HISTORY FRAME ROOT::Core ROOT::Html PkgConfig::CWBDEPS ${HEALPIX_LIBRARIES})
-+    target_link_libraries(${PROJECT_NAME} PUBLIC WAT TOOLBOX STFT GWAT HISTORY FRAME ROOT::Core PkgConfig::CWBDEPS ${HEALPIX_LIBRARIES})
++    target_link_libraries(${PROJECT_NAME} PUBLIC WAT TOOLBOX STFT GWAT HISTORY FRAME ROOT::Core ${_CWB_HTML_LIB} PkgConfig::CWBDEPS ${HEALPIX_LIBRARIES})
  endif()
 
  #Generate the root dictionary
+--- a/tools/cwb/ced.cc
++++ b/tools/cwb/ced.cc
+@@ -20,8 +20,10 @@
+ #include "watplot.hh"
+ #include "wseries.hh"
+
++#ifdef CWB_HAS_ROOT_HTML
+ #include "THtml.h"
+ #include "TDocOutput.h"
++#endif
+ #include "TH2.h"
+ #include "TStyle.h"
+ #include "TCanvas.h"
+@@ -877,6 +879,7 @@
+
+       // convert user macro into html and copy to ced dir
+       if(sbasedirCED!=NULL) {
++#ifdef CWB_HAS_ROOT_HTML
+         THtml html;
+         html.SetEtcDir(gSystem->ExpandPathName("$HOME_WAT/html/etc/html"));
+         html.SetProductName("CED");
+@@ -933,6 +936,9 @@
+         // restore the stdout output
+         fflush(stdout); dup2(fdout, fileno(stdout)); close(fdout);
+         clearerr(stdout); fsetpos(stdout, &posout);
++#else
++        cout << "Warning: THtml not available (ROOT >= 6.36), skipping macro-to-HTML conversion" << endl;
++#endif
+       }
+
+       // create jobSummary.html & eventSummary.html
