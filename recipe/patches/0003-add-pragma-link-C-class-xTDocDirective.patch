@@ -1,7 +1,7 @@
-From 30bf2af0ec14c1b5b7c0db71095da1c0a397d2d6 Mon Sep 17 00:00:00 2001
+From 30465b3b2b3ad8c36c4c7c31747019b68dcea524 Mon Sep 17 00:00:00 2001
 From: Gabriele Vedovato <Gabriele.Vedovato@lnl.infn.it>
 Date: Sat, 30 Aug 2025 08:03:36 -0700
-Subject: [PATCH 3/6] add '#pragma link C++ class xTDocDirective+;'
+Subject: [PATCH 3/7] add '#pragma link C++ class xTDocDirective+;'
 
 ---
  tools/xhtml/xhtml_LinkDef.h | 1 +

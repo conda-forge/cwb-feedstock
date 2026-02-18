@@ -20,6 +20,8 @@ source:
     - patches/0004-added-more-xTDoc.-streamers.patch
     - patches/0005-Minor-changes.patch
     - patches/0006-First-implementation-of-the-xTHtml-class.patch
+    # fix plain vs keyword target_link_libraries mixing
+    - patches/0007-Fix-mixing-plain-and-keyword-target_link_libraries-s.patch
 
 build:
   number: 5

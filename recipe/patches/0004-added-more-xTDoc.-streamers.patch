@@ -1,7 +1,7 @@
-From a5f6823a1d3759065ea5444f23ef00af05ab18a2 Mon Sep 17 00:00:00 2001
+From 223c36161ffc4a4b07af1927e969171dd9283e8b Mon Sep 17 00:00:00 2001
 From: Gabriele Vedovato <Gabriele.Vedovato@lnl.infn.it>
 Date: Sat, 30 Aug 2025 08:59:36 -0700
-Subject: [PATCH 4/6] added more xTDoc... streamers
+Subject: [PATCH 4/7] added more xTDoc... streamers
 
 ---
  tools/xhtml/xTDocDirective.cc | 54 +++++++++++++++++------------------

@@ -1,7 +1,7 @@
-From 927e376c7f96584014568b87fb3cf31bd878ed09 Mon Sep 17 00:00:00 2001
+From a3a378270cc04c9734d862d824f8b2c9e841a264 Mon Sep 17 00:00:00 2001
 From: Gabriele Vedovato <Gabriele.Vedovato@lnl.infn.it>
 Date: Fri, 29 Aug 2025 05:42:40 -0700
-Subject: [PATCH 1/6] Cherry-pick ./src/root/html/ from the ROOT source to
+Subject: [PATCH 1/7] Cherry-pick ./src/root/html/ from the ROOT source to
  create xhtml class, since THtml is deprecated and will be removed from ROOT
  in ver. 6.36.
 
