@@ -9,7 +9,7 @@ package:
   version: ${{ version }}
 
 source:
-  url: https://gitlab.com/gwburst/public/library/-/archive/{{ version }}/library-{{ version }}.tar.gz
+  url: https://gitlab.com/gwburst/public/library/-/archive/${{ version }}/library-${{ version }}.tar.gz
   sha256: 9dc101cb906749c5cc271b151db1db96d29cfcb6ff59e77cdb676097afc75dff
   patches:
     # Forward-port changes from https://gitlab.com/gwburst/public/library/-/commits/public_xhtml
