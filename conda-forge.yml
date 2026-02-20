@@ -1,8 +1,9 @@
-os_version:
-  linux_64: cos7
+bot:
+  abi_migration_branches:
+  - v6.4.6.x
+conda_build:
+  pkg_format: '2'
+conda_forge_output_validation: true
 github:
   branch_name: main
   tooling_branch_name: main
-conda_forge_output_validation: true
-conda_build:
-  pkg_format: '2'
