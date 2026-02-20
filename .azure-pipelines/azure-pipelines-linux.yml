@@ -8,12 +8,16 @@ jobs:
     vmImage: ubuntu-latest
   strategy:
     matrix:
-      linux_64_root_base6.36.8:
-        CONFIG: linux_64_root_base6.36.8
+      linux_64_root_base6.36.8root_cxx_standard20:
+        CONFIG: linux_64_root_base6.36.8root_cxx_standard20
         UPLOAD_PACKAGES: 'True'
         DOCKER_IMAGE: quay.io/condaforge/linux-anvil-x86_64:alma9
-      linux_64_root_base6.38.0:
-        CONFIG: linux_64_root_base6.38.0
+      linux_64_root_base6.38.0root_cxx_standard20:
+        CONFIG: linux_64_root_base6.38.0root_cxx_standard20
+        UPLOAD_PACKAGES: 'True'
+        DOCKER_IMAGE: quay.io/condaforge/linux-anvil-x86_64:alma9
+      linux_64_root_base6.38.0root_cxx_standard23:
+        CONFIG: linux_64_root_base6.38.0root_cxx_standard23
         UPLOAD_PACKAGES: 'True'
         DOCKER_IMAGE: quay.io/condaforge/linux-anvil-x86_64:alma9
   timeoutInMinutes: 360
