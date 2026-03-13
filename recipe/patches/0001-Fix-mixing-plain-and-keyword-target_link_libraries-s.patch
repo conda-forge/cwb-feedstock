@@ -1,0 +1,28 @@
+From 62f543e51b5089df9286f18e5821315a6ed6fe31 Mon Sep 17 00:00:00 2001
+From: Chris Burr <christopher.burr@cern.ch>
+Date: Fri, 20 Feb 2026 11:32:19 +0000
+Subject: [PATCH] Fix mixing plain and keyword target_link_libraries signatures
+
+ROOT's ROOT_GENERATE_DICTIONARY macro calls target_link_libraries with
+keyword signature (PUBLIC/PRIVATE). CMake requires all calls for a given
+target to use the same form. Add PUBLIC keyword to the plain call.
+---
+ wat/CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/wat/CMakeLists.txt b/wat/CMakeLists.txt
+index bb6eea84..c24c8c6d 100644
+--- a/wat/CMakeLists.txt
++++ b/wat/CMakeLists.txt
+@@ -67,7 +67,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${CWB_INCLUDE_DIRS})
+ target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tools/toolbox)
+ target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tools/history)
+ 
+-target_link_libraries(${PROJECT_NAME} ROOT::TreePlayer ROOT::Core ROOT::Graf ROOT::FFTW ROOT::Tree ROOT::Gpad ROOT::Physics ${HEALPIX_LIBRARY})
++target_link_libraries(${PROJECT_NAME} PUBLIC ROOT::TreePlayer ROOT::Core ROOT::Graf ROOT::FFTW ROOT::Tree ROOT::Gpad ROOT::Physics ${HEALPIX_LIBRARY})
+ 
+ #Generate the root dictionary
+ ROOT_GENERATE_DICTIONARY(wavedict ${WAT_HDRS}
+-- 
+2.53.0
+
