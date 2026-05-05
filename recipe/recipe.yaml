@@ -2,29 +2,22 @@ schema_version: 1
 
 context:
   name: cWB
-  version: 6.4.6.0
+  version: 6.4.6.9
+  tag: ${{ name }}-${{ version }}
 
 package:
   name: ${{ name|lower }}
   version: ${{ version }}
 
 source:
-  url: https://gitlab.com/gwburst/public/library/-/archive/${{ version }}/library-${{ version }}.tar.gz
-  sha256: 9dc101cb906749c5cc271b151db1db96d29cfcb6ff59e77cdb676097afc75dff
+  url: https://gitlab.com/gwburst/public/library/-/archive/${{ tag }}/library-${{ tag }}.tar.gz
+  sha256: 0bae9fbf85ff52b38402198cb670f0f4f9259159a3c83f23582ce5a505f5b760
   patches:
-    # Forward-port changes from https://gitlab.com/gwburst/public/library/-/commits/public_xhtml
-    # relative to 504bc84678f78266538f94a5ff2f75e83b953e1d
-    - patches/0001-Cherry-pick-.-src-root-html-from-the-ROOT-source-to-.patch
-    - patches/0002-added-xTDocInfo-class-to-xhtml-library.patch
-    - patches/0003-add-pragma-link-C-class-xTDocDirective.patch
-    - patches/0004-added-more-xTDoc.-streamers.patch
-    - patches/0005-Minor-changes.patch
-    - patches/0006-First-implementation-of-the-xTHtml-class.patch
-    # fix plain vs keyword target_link_libraries mixing
-    - patches/0007-Fix-mixing-plain-and-keyword-target_link_libraries-s.patch
+    # Fix plain vs keyword target_link_libraries mixing
+    - patches/0001-Fix-mixing-plain-and-keyword-target_link_libraries-s.patch
 
 build:
-  number: 5
+  number: 0
   skip:
     - not linux
 
@@ -104,5 +97,5 @@ about:
 
 extra:
   recipe-maintainers:
-    - ceccozzi
     - duncanmmacleod
+    - mdrago82
