@@ -46,44 +46,12 @@ Current build status
 ====================
 
 
-<table>
-    
-  <tr>
-    <td>Azure</td>
+<table><tr>
+    <td>GitHub Actions</td>
     <td>
-      <details>
-        <summary>
-          <a href="https://dev.azure.com/conda-forge/feedstock-builds/_build/latest?definitionId=16827&branchName=main">
-            <img src="https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/cwb-feedstock?branchName=main">
-          </a>
-        </summary>
-        <table>
-          <thead><tr><th>Variant</th><th>Status</th></tr></thead>
-          <tbody><tr>
-              <td>linux_64_root_base6.36.8root_cxx_standard20</td>
-              <td>
-                <a href="https://dev.azure.com/conda-forge/feedstock-builds/_build/latest?definitionId=16827&branchName=main">
-                  <img src="https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/cwb-feedstock?branchName=main&jobName=linux&configuration=linux%20linux_64_root_base6.36.8root_cxx_standard20" alt="variant">
-                </a>
-              </td>
-            </tr><tr>
-              <td>linux_64_root_base6.38.0root_cxx_standard20</td>
-              <td>
-                <a href="https://dev.azure.com/conda-forge/feedstock-builds/_build/latest?definitionId=16827&branchName=main">
-                  <img src="https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/cwb-feedstock?branchName=main&jobName=linux&configuration=linux%20linux_64_root_base6.38.0root_cxx_standard20" alt="variant">
-                </a>
-              </td>
-            </tr><tr>
-              <td>linux_64_root_base6.38.0root_cxx_standard23</td>
-              <td>
-                <a href="https://dev.azure.com/conda-forge/feedstock-builds/_build/latest?definitionId=16827&branchName=main">
-                  <img src="https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/cwb-feedstock?branchName=main&jobName=linux&configuration=linux%20linux_64_root_base6.38.0root_cxx_standard23" alt="variant">
-                </a>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </details>
+      <a href="https://github.com/conda-forge/cwb-feedstock/actions/workflows/conda-build.yml">
+        <img src="https://github.com/conda-forge/cwb-feedstock/actions/workflows/conda-build.yml/badge.svg?event=push&branch=main">
+      </a>
     </td>
   </tr>
 </table>
