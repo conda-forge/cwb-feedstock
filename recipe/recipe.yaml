@@ -2,7 +2,7 @@ schema_version: 1
 
 context:
   name: cWB
-  version: 6.4.7.0
+  version: "6.4.8.0"
 
 package:
   name: ${{ name|lower }}
@@ -10,7 +10,7 @@ package:
 
 source:
   url: https://gitlab.com/gwburst/public/library/-/archive/cWB-${{ version }}/library-cWB-${{ version }}.tar.gz
-  sha256: 49f12d919348d5b0f405e986c0bac3c2097013afe1f6d9a0c16dd63cbd2a7ff6
+  sha256: 41585d01111a215f29eb8623e4ade110187d150214c947e965882e50b459fd37
   patches:
     # Forward-port changes from https://gitlab.com/gwburst/public/library/-/commits/public_xhtml
     # relative to 504bc84678f78266538f94a5ff2f75e83b953e1d
@@ -24,7 +24,7 @@ source:
     - patches/0007-Fix-mixing-plain-and-keyword-target_link_libraries-s.patch
 
 build:
-  number: 4
+  number: 0
   skip:
     - not linux
 
