@@ -11,12 +11,6 @@ package:
 source:
   url: https://gitlab.com/gwburst/public/library/-/archive/cWB-${{ version }}/library-cWB-${{ version }}.tar.gz
   sha256: 41585d01111a215f29eb8623e4ade110187d150214c947e965882e50b459fd37
-  patches:
-    # fix plain vs keyword target_link_libraries mixing
-    - patches/0007-Fix-mixing-plain-and-keyword-target_link_libraries-s.patch
-    # ROOT 6.40 names the dictionary pcm after the library's OUTPUT_NAME rather
-    # than the target name. Not yet sent upstream.
-    - patches/0008-Resolve-the-dictionary-pcm-name-against-the-ROOT-ver.patch
 
 build:
   number: 0
