@@ -11,9 +11,6 @@ package:
 source:
   url: https://gitlab.com/gwburst/public/library/-/archive/cWB-${{ version }}/library-cWB-${{ version }}.tar.gz
   sha256: 41585d01111a215f29eb8623e4ade110187d150214c947e965882e50b459fd37
-  patches:
-    # fix plain vs keyword target_link_libraries mixing
-    - patches/0007-Fix-mixing-plain-and-keyword-target_link_libraries-s.patch
 
 build:
   number: 0
