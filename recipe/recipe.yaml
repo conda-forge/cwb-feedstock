@@ -17,7 +17,7 @@ source:
     - patches/0001-Fix-mixing-plain-and-keyword-target_link_libraries-s.patch
 
 build:
-  number: 0
+  number: 1
   skip:
     - not linux
 
