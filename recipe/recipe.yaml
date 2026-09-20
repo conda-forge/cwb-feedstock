@@ -11,6 +11,11 @@ package:
 source:
   url: https://gitlab.com/gwburst/public/library/-/archive/cWB-${{ version }}/library-cWB-${{ version }}.tar.gz
   sha256: 41585d01111a215f29eb8623e4ade110187d150214c947e965882e50b459fd37
+  patches:
+    # tools/wavescan is new in 6.4.8.0 and kept the old dictionary pcm install
+    # rule that ROOT 6.40 broke; the other eight were fixed upstream. Not yet
+    # sent upstream.
+    - patches/0001-Install-the-wavescan-dictionary-pcm-under-either-ROO.patch
 
 build:
   number: 0

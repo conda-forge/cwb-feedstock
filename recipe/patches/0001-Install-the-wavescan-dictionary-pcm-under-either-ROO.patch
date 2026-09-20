@@ -1,0 +1,33 @@
+From b305ebe54b799da7906c3d776a8fdc13cbab3567 Mon Sep 17 00:00:00 2001
+Subject: [PATCH] Install the wavescan dictionary pcm under either ROOT naming
+
+tools/wavescan is new in 6.4.8.0 and kept the old install rule, while the
+other eight dictionary libraries were updated to accept both names. Its target
+is WAVESCAN with OUTPUT_NAME wavescan, so on ROOT >= 6.40 rootcling emits
+libwavescan_rdict.pcm and the install looks for libWAVESCAN_rdict.pcm:
+
+  CMake Error at tools/wavescan/cmake_install.cmake (file):
+    file INSTALL cannot find ".../libWAVESCAN_rdict.pcm"
+
+Same treatment as wat/CMakeLists.txt and the rest.
+---
+ tools/wavescan/CMakeLists.txt | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/tools/wavescan/CMakeLists.txt b/tools/wavescan/CMakeLists.txt
+index 604dbf6..442969d 100644
+--- a/tools/wavescan/CMakeLists.txt
++++ b/tools/wavescan/CMakeLists.txt
+@@ -41,5 +41,10 @@ ROOT_GENERATE_DICTIONARY(WAVESCAN_dict ${WAVESCAN_HDRS}
+ install(TARGETS ${PROJECT_NAME})
+ install(FILES ${WAVESCAN_HDRS}
+         TYPE INCLUDE)
+-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}_rdict.pcm
+-        TYPE LIB)
++# ROOT names the dictionary pcm after the target OUTPUT_NAME (ROOT >= 6.40,
++# e.g. libwavescan_rdict.pcm) or after the MODULE / PROJECT_NAME (ROOT < 6.40,
++# e.g. libWAVESCAN_rdict.pcm); install whichever this ROOT emitted (OPTIONAL:
++# only one of the two names exists on any given ROOT).
++install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}$<TARGET_FILE_BASE_NAME:${PROJECT_NAME}>_rdict.pcm
++              ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}_rdict.pcm
++        TYPE LIB OPTIONAL)
