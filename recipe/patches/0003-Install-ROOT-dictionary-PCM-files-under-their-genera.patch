@@ -1,0 +1,144 @@
+From e44f6edc2c244a8533c4e9c248c2ee96f07312e7 Mon Sep 17 00:00:00 2001
+From: Duncan Macleod <macleoddm@cardiff.ac.uk>
+Date: Tue, 17 Nov 2026 11:08:15 +0000
+Subject: [PATCH 3/3] Install ROOT dictionary PCM files under their generated
+ names
+
+Since ROOT 6.40, ROOT_GENERATE_DICTIONARY(... MODULE <target>) names the
+generated _rdict.pcm file after the target's OUTPUT_NAME property rather
+than the target name itself, e.g. libwavelet-4x_rdict.pcm rather than
+libWAT_rdict.pcm. The install rules hard-coded the old name, so
+`cmake --install` failed looking for a file that was never generated.
+
+Use a generator expression to derive the name from OUTPUT_NAME so that
+the install rules match what ROOT generates.
+---
+ tools/bico/CMakeLists.txt      | 2 +-
+ tools/cwb/CMakeLists.txt       | 2 +-
+ tools/frame/CMakeLists.txt     | 2 +-
+ tools/gwat/CMakeLists.txt      | 2 +-
+ tools/history/CMakeLists.txt   | 2 +-
+ tools/stft/CMakeLists.txt      | 2 +-
+ tools/toolbox/CMakeLists.txt   | 2 +-
+ tools/wavegraph/CMakeLists.txt | 2 +-
+ tools/xhtml/CMakeLists.txt     | 2 +-
+ wat/CMakeLists.txt             | 2 +-
+ 10 files changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/tools/bico/CMakeLists.txt b/tools/bico/CMakeLists.txt
+index 47937d5a..1824daf2 100644
+--- a/tools/bico/CMakeLists.txt
++++ b/tools/bico/CMakeLists.txt
+@@ -47,5 +47,5 @@ ROOT_GENERATE_DICTIONARY(Bicoherence_dict ${BICO_HDRS}
+ install(TARGETS ${PROJECT_NAME})
+ install(FILES ${BICO_HDRS}
+         TYPE INCLUDE)
+-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}_rdict.pcm
++install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}$<TARGET_PROPERTY:${PROJECT_NAME},OUTPUT_NAME>_rdict.pcm
+         TYPE LIB)
+diff --git a/tools/cwb/CMakeLists.txt b/tools/cwb/CMakeLists.txt
+index 3637982f..ec9d7f5c 100644
+--- a/tools/cwb/CMakeLists.txt
++++ b/tools/cwb/CMakeLists.txt
+@@ -88,7 +88,7 @@ ROOT_GENERATE_DICTIONARY(cwb_dict ${CWB_HDRS}
+ install(TARGETS CWB)
+ install(FILES ${CWB_HDRS}
+         TYPE INCLUDE)
+-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}_rdict.pcm
++install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}$<TARGET_PROPERTY:${PROJECT_NAME},OUTPUT_NAME>_rdict.pcm
+         TYPE LIB)
+ 
+ get_target_property(CWB_OUTPUT_NAME ${PROJECT_NAME} OUTPUT_NAME)
+diff --git a/tools/frame/CMakeLists.txt b/tools/frame/CMakeLists.txt
+index 9de0c837..b3c9ae66 100644
+--- a/tools/frame/CMakeLists.txt
++++ b/tools/frame/CMakeLists.txt
+@@ -42,5 +42,5 @@ ROOT_GENERATE_DICTIONARY(frame_dict ${FRAME_HDRS}
+ install(TARGETS ${PROJECT_NAME})
+ install(FILES ${FRAME_HDRS}
+         TYPE INCLUDE)
+-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}_rdict.pcm
++install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}$<TARGET_PROPERTY:${PROJECT_NAME},OUTPUT_NAME>_rdict.pcm
+         TYPE LIB)
+diff --git a/tools/gwat/CMakeLists.txt b/tools/gwat/CMakeLists.txt
+index 3caa6500..c8681b33 100644
+--- a/tools/gwat/CMakeLists.txt
++++ b/tools/gwat/CMakeLists.txt
+@@ -43,7 +43,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${GWAT_INCLUDE_DIRS})
+ install(TARGETS ${PROJECT_NAME})
+ install(FILES ${GWAT_HDRS}
+         TYPE INCLUDE)
+-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}_rdict.pcm
++install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}$<TARGET_PROPERTY:${PROJECT_NAME},OUTPUT_NAME>_rdict.pcm
+         TYPE LIB)
+ install(
+     DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/data
+diff --git a/tools/history/CMakeLists.txt b/tools/history/CMakeLists.txt
+index cd691b57..f2c81c5d 100644
+--- a/tools/history/CMakeLists.txt
++++ b/tools/history/CMakeLists.txt
+@@ -36,5 +36,5 @@ ROOT_GENERATE_DICTIONARY(History_dict ${HISTORY_HDRS}
+ install(TARGETS ${PROJECT_NAME})
+ install(FILES ${HISTORY_HDRS}
+         TYPE INCLUDE)
+-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}_rdict.pcm
++install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}$<TARGET_PROPERTY:${PROJECT_NAME},OUTPUT_NAME>_rdict.pcm
+         TYPE LIB)
+diff --git a/tools/stft/CMakeLists.txt b/tools/stft/CMakeLists.txt
+index 81d460c2..eaf2395c 100644
+--- a/tools/stft/CMakeLists.txt
++++ b/tools/stft/CMakeLists.txt
+@@ -33,5 +33,5 @@ ROOT_GENERATE_DICTIONARY(STFT_dict ${STFT_HDRS}
+ install(TARGETS ${PROJECT_NAME})
+ install(FILES ${STFT_HDRS}
+         TYPE INCLUDE)
+-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}_rdict.pcm
++install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}$<TARGET_PROPERTY:${PROJECT_NAME},OUTPUT_NAME>_rdict.pcm
+         TYPE LIB)
+diff --git a/tools/toolbox/CMakeLists.txt b/tools/toolbox/CMakeLists.txt
+index e13af169..44ac4f00 100644
+--- a/tools/toolbox/CMakeLists.txt
++++ b/tools/toolbox/CMakeLists.txt
+@@ -57,5 +57,5 @@ ROOT_GENERATE_DICTIONARY(Toolbox_dict ${TOOLBOX_HDRS}
+ install(TARGETS ${PROJECT_NAME})
+ install(FILES ${TOOLBOX_HDRS}
+         TYPE INCLUDE)
+-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}_rdict.pcm
++install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}$<TARGET_PROPERTY:${PROJECT_NAME},OUTPUT_NAME>_rdict.pcm
+         TYPE LIB)
+diff --git a/tools/wavegraph/CMakeLists.txt b/tools/wavegraph/CMakeLists.txt
+index 30620fd1..7cdffe9d 100644
+--- a/tools/wavegraph/CMakeLists.txt
++++ b/tools/wavegraph/CMakeLists.txt
+@@ -39,5 +39,5 @@ ROOT_GENERATE_DICTIONARY(wavegraph_dict ${WAVEGRAPH_HDRS}
+ install(TARGETS WAVEGRAPH)
+ install(FILES ${WAVEGRAPH_HDRS}
+         TYPE INCLUDE)
+-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}_rdict.pcm
++install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}$<TARGET_PROPERTY:${PROJECT_NAME},OUTPUT_NAME>_rdict.pcm
+         TYPE LIB)
+diff --git a/tools/xhtml/CMakeLists.txt b/tools/xhtml/CMakeLists.txt
+index 33fa2d45..65590158 100644
+--- a/tools/xhtml/CMakeLists.txt
++++ b/tools/xhtml/CMakeLists.txt
+@@ -45,5 +45,5 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ROOT::Core)
+ install(TARGETS ${PROJECT_NAME})
+ install(FILES ${XHTML_HDRS}
+         TYPE INCLUDE)
+-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}_rdict.pcm
++install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}$<TARGET_PROPERTY:${PROJECT_NAME},OUTPUT_NAME>_rdict.pcm
+         TYPE LIB)
+diff --git a/wat/CMakeLists.txt b/wat/CMakeLists.txt
+index c24c8c6d..989dfdb5 100644
+--- a/wat/CMakeLists.txt
++++ b/wat/CMakeLists.txt
+@@ -86,5 +86,5 @@ install(FILES ${WAT_HDRS}
+ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/lib/wavelet-${XIFO}x.so 
+               ${CMAKE_CURRENT_BINARY_DIR}/lib/wavelet.so
+               ${CMAKE_CURRENT_BINARY_DIR}/lib/libwavelet.so
+-              ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}_rdict.pcm
++              ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}$<TARGET_PROPERTY:${PROJECT_NAME},OUTPUT_NAME>_rdict.pcm
+         TYPE LIB)
+-- 
+2.47.3
+

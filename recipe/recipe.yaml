@@ -15,6 +15,11 @@ source:
   patches:
     # Fix plain vs keyword target_link_libraries mixing
     - patches/0001-Fix-mixing-plain-and-keyword-target_link_libraries-s.patch
+    # Fix LAL version comparisons
+    - patches/0002-Fix-LAL-version-checks.patch
+    # Install ROOT dictionary PCMs under the names ROOT >=6.40 generates
+    - if: match(root_base, ">=6.40")
+      then: patches/0003-Install-ROOT-dictionary-PCM-files-under-their-genera.patch
 
 build:
   number: 1

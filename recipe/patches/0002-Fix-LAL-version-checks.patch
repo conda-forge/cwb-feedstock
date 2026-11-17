@@ -1,0 +1,243 @@
+From e5f3bd23406eff1e5162bd61c68616fb179a42da Mon Sep 17 00:00:00 2001
+From: Duncan Macleod <macleoddm@cardiff.ac.uk>
+Date: Tue, 17 Nov 2026 10:36:35 +0000
+Subject: [PATCH 2/3] Fix LAL version checks
+
+Use a macro to generate the LAL_VERSION as a single integer, so that we can compare minor versions properly
+---
+ tools/cwb/mdc.cc | 50 ++++++++++++++++--------------------------------
+ tools/cwb/mdc.hh | 26 +++++++++++++------------
+ 2 files changed, 31 insertions(+), 45 deletions(-)
+
+diff --git a/tools/cwb/mdc.cc b/tools/cwb/mdc.cc
+index 4100f156..78be793a 100644
+--- a/tools/cwb/mdc.cc
++++ b/tools/cwb/mdc.cc
+@@ -778,9 +778,7 @@ CWB::mdc::AddWaveform(MDC_TYPE mdc_type, vector<mdcpar> par, TString uname) {
+   } else
+   if(mdc_type==MDC_GA_LAL) {	// use LAL GA waveform 
+ 
+-#if LAL_VERSION_MAJOR >   6 || (LAL_VERSION_MAJOR ==  6 && \
+-   (LAL_VERSION_MINOR >  15 || (LAL_VERSION_MINOR == 15 && \
+-    LAL_VERSION_MICRO >=  0                             )))     // LAL_VERSION >= 6.15.0
++#if CWB_LAL_VERSION_GE(6, 15, 0, 0)
+ #ifdef _USE_LAL
+     error=false;
+     double duration = GetPar("duration",par,error);
+@@ -887,9 +885,7 @@ CWB::mdc::AddWaveform(MDC_TYPE mdc_type, vector<mdcpar> par, TString uname) {
+   } else
+   if(mdc_type==MDC_SC_LAL) {	// use LAL cosmic string cusp waveform
+ 
+-#if LAL_VERSION_MAJOR >   6 || (LAL_VERSION_MAJOR ==  6 && \
+-   (LAL_VERSION_MINOR >  15 || (LAL_VERSION_MINOR == 15 && \
+-    LAL_VERSION_MICRO >=  0                             )))     // LAL_VERSION >= 6.15.0
++#if CWB_LAL_VERSION_GE(6, 15, 0, 0)
+ #ifdef _USE_LAL
+     error=false;
+     double frequency = GetPar("frequency",par,error);
+@@ -3872,9 +3868,7 @@ CWB::mdc::SetSkyDistribution(MDC_DISTRIBUTION sky_distribution, TString fName, v
+ #ifdef _USE_LAL
+     cout << "CWB::mdc::SetSkyDistribution - User Distribution from XML" << endl;
+ 
+-#if LAL_VERSION_MAJOR >   6 || (LAL_VERSION_MAJOR ==  6 && \
+-   (LAL_VERSION_MINOR >  14 || (LAL_VERSION_MINOR == 14 && \
+-    LAL_VERSION_MICRO >=  0                             )))     // LAL_VERSION >= 6.14.0
++#if CWB_LAL_VERSION_GE(6, 14, 0, 0)
+ #else
+     cout << "CWB::mdc::SetSkyDistribution - LAL XML File can not be used with LAL ver < 6.14.0" << endl; 
+     exit(1);
+@@ -3934,7 +3928,7 @@ CWB::mdc::SetSkyDistribution(MDC_DISTRIBUTION sky_distribution, TString fName, v
+     }
+ 
+     // read sim_burst table from XML file (see LIGOLwXMLBurstRead.c)
+-#if LAL_VERSION_MAJOR >= 7 && LAL_VERSION_MINOR >= 3
++#if CWB_LAL_VERSION_GE(7, 3, 0, 0)
+     SimBurst* sim_burst = XLALSimBurstTableFromLIGOLw(fName.Data());
+ #else
+     LIGOTimeGPS gpsStartTime = {(int)start, 0};
+@@ -5175,8 +5169,7 @@ CWB::mdc::GetInspiral(wavearray<double>& x, TString ifo) {
+   wat::Time inj_time_shift(inj_shift);
+ 
+   // injections 
+-#if (LAL_VERSION_MAJOR == 7 && LAL_VERSION_MINOR < 3) || \
+-    LAL_VERSION_MAJOR < 7
++#if !CWB_LAL_VERSION_GE(7, 3, 0, 0)
+   INT4 numInjections = 0;
+ #endif
+   SimInspiralTable *injections = NULL;
+@@ -5187,7 +5180,7 @@ CWB::mdc::GetInspiral(wavearray<double>& x, TString ifo) {
+ 
+   XLALSetSilentErrorHandler();
+ 
+-#if LAL_VERSION_MAJOR >= 7 && LAL_VERSION_MINOR >= 3
++#if CWB_LAL_VERSION_GE(7, 3, 0, 0)
+   // read the injections
+   injections = XLALSimInspiralTableFromLIGOLw(injectionFile.Data());
+ 
+@@ -5298,7 +5291,7 @@ CWB::mdc::GetInspiral(wavearray<double>& x, TString ifo) {
+   SimInspiralTable *thisInj = NULL;
+   for (thisInj = injections; thisInj; thisInj = thisInj->next)
+   {                                                           
+-#if LAL_VERSION_MAJOR >= 7 && LAL_VERSION_MINOR >= 3
++#if CWB_LAL_VERSION_GE(7, 3, 0, 0)
+     int epoch = thisInj->geocent_end_time.gpsSeconds;
+     if(epoch<gpsStartSec || epoch>gpsEndSec) continue;	// skip events outside the buffer range
+ #endif
+@@ -5878,7 +5871,7 @@ CWB::mdc::FindChirpInjectSignals(wavearray<double>& w, SimInspiralTable *injecti
+   SimInspiralTable *thisInj = NULL;
+   for (thisInj = injections; thisInj; thisInj = thisInj->next)
+   {                                                       
+-#if LAL_VERSION_MAJOR >= 7 && LAL_VERSION_MINOR >= 3
++#if CWB_LAL_VERSION_GE(7, 3, 0, 0)
+     int epoch = thisInj->geocent_end_time.gpsSeconds;
+     if(epoch<gpsStartSec || epoch>gpsEndSec) continue;	// skip events outside the buffer range
+ #endif
+@@ -5900,9 +5893,7 @@ CWB::mdc::FindChirpInjectSignals(wavearray<double>& w, SimInspiralTable *injecti
+ */
+     if(approximant==NR_hdf5) {
+ 
+-#if LAL_VERSION_MAJOR >  6 || (LAL_VERSION_MAJOR ==  6 && \
+-   (LAL_VERSION_MINOR > 18 || (LAL_VERSION_MINOR == 18 && \
+-   (LAL_VERSION_MICRO >  0 || (LAL_VERSION_MICRO ==  0 && LAL_VERSION_DEVEL >= 1)))))     // LAL_VERSION >= 6.18.0.1
++#if CWB_LAL_VERSION_GE(6, 18, 0, 1)     // LAL_VERSION >= 6.18.0.1
+ 
+       // see LALInferenceReadData.c
+       LALDict *LALpars=XLALCreateDict();
+@@ -5979,9 +5970,7 @@ CWB::mdc::FindChirpInjectSignals(wavearray<double>& w, SimInspiralTable *injecti
+ 
+     } else {
+ 
+-#if LAL_VERSION_MAJOR >   6 || (LAL_VERSION_MAJOR ==  6 && \
+-   (LAL_VERSION_MINOR >  16 || (LAL_VERSION_MINOR == 16 && \
+-    LAL_VERSION_MICRO >=  1                             )))     // LAL_VERSION >= 6.16.1
++#if CWB_LAL_VERSION_GE(6, 16, 1, 0)     // LAL_VERSION >= 6.16.1
+ 
+       // check if source is produced by CWB::mdc::Posterior2XML
+       TString source = TString(thisInj->source);
+@@ -6138,8 +6127,7 @@ CWB::mdc::GetInspiral(TString pol, int gps_start_time, int gps_end_time) {
+   wat::Time inj_time_shift(inj_shift);
+ 
+   // injections 
+-#if (LAL_VERSION_MAJOR == 7 && LAL_VERSION_MINOR < 3) || \
+-    LAL_VERSION_MAJOR < 7
++#if !CWB_LAL_VERSION_GE(7, 3, 0, 0)
+   INT4 numInjections = 0;
+ #endif
+   SimInspiralTable *injections = NULL;
+@@ -6150,7 +6138,7 @@ CWB::mdc::GetInspiral(TString pol, int gps_start_time, int gps_end_time) {
+ 
+   XLALSetSilentErrorHandler();
+ 
+-#if LAL_VERSION_MAJOR >= 7 && LAL_VERSION_MINOR >= 3
++#if CWB_LAL_VERSION_GE(7, 3, 0, 0)
+   // read the injections
+   injections = XLALSimInspiralTableFromLIGOLw(injectionFile.Data());
+ 
+@@ -6269,9 +6257,7 @@ CWB::mdc::GetInspiral(TString pol, int gps_start_time, int gps_end_time) {
+ */
+     if(approximant==NR_hdf5) {
+ 
+-#if LAL_VERSION_MAJOR >  6 || (LAL_VERSION_MAJOR ==  6 && \
+-   (LAL_VERSION_MINOR > 18 || (LAL_VERSION_MINOR == 18 && \
+-   (LAL_VERSION_MICRO >  0 || (LAL_VERSION_MICRO ==  0 && LAL_VERSION_DEVEL >= 1)))))     // LAL_VERSION >= 6.18.0.1
++#if CWB_LAL_VERSION_GE(6, 18, 0, 1)     // LAL_VERSION >= 6.18.0.1
+ 
+       // see LALInferenceReadData.c
+       LALDict *LALpars=XLALCreateDict();
+@@ -6349,9 +6335,7 @@ CWB::mdc::GetInspiral(TString pol, int gps_start_time, int gps_end_time) {
+ 
+     } else {
+ 
+-#if LAL_VERSION_MAJOR >   6 || (LAL_VERSION_MAJOR ==  6 && \
+-   (LAL_VERSION_MINOR >  16 || (LAL_VERSION_MINOR == 16 && \
+-    LAL_VERSION_MICRO >=  1                             )))     // LAL_VERSION >= 6.16.1
++#if CWB_LAL_VERSION_GE(6, 16, 1, 0)     // LAL_VERSION >= 6.16.1
+ 
+       // check if source is produced by CWB::mdc::Posterior2XML
+       TString source = TString(thisInj->source);
+@@ -6939,7 +6923,7 @@ CWB::mdc::Posterior2XML(TString sampleFile, TString xmlFile, TString options) {
+   }
+ 
+   static LALStatus status;
+-#if LAL_VERSION_MAJOR >= 7 && LAL_VERSION_MINOR >= 3
++#if CWB_LAL_VERSION_GE(7, 3, 0, 0)
+   LIGOLwXMLStream  *xmlfp;
+ #else
+   LIGOLwXMLStream  xmlfp;
+@@ -6955,7 +6939,7 @@ CWB::mdc::Posterior2XML(TString sampleFile, TString xmlFile, TString options) {
+   wat::Time timeStep(time_step);
+ 
+   // create the first injection 
+-#if LAL_VERSION_MAJOR >= 7 && LAL_VERSION_MINOR >= 3
++#if CWB_LAL_VERSION_GE(7, 3, 0, 0)
+   SimInspiralTable *injections;                                 // see lalsuite include/lal/LIGOMetadataTables.h
+   simTable = injections = (SimInspiralTable *) calloc( 1, sizeof(SimInspiralTable) );
+ #else
+@@ -7140,7 +7124,7 @@ CWB::mdc::Posterior2XML(TString sampleFile, TString xmlFile, TString options) {
+   if(clb_file!="") clb.close();
+ 
+   // write xml file
+-#if LAL_VERSION_MAJOR >= 7 && LAL_VERSION_MINOR >= 3
++#if CWB_LAL_VERSION_GE(7, 3, 0, 0)
+   xmlfp = XLALOpenLIGOLwXMLFile( xmlFile.Data() );
+   if(simTable) {
+     XLALWriteLIGOLwXMLSimInspiralTable( xmlfp, injections);
+diff --git a/tools/cwb/mdc.hh b/tools/cwb/mdc.hh
+index f957b18b..f042845d 100644
+--- a/tools/cwb/mdc.hh
++++ b/tools/cwb/mdc.hh
+@@ -84,12 +84,21 @@
+ #undef _RANDOM_H        
+ #endif
+ 
+-#if LAL_VERSION_MAJOR >= 7 && LAL_VERSION_MINOR >= 3
++#include <lal/LALConfig.h>
++
++#define CWB_LAL_VERSION_ENCODE(major, minor, micro, devel) \
++  ((major) * 1000000000LL + (minor) * 1000000LL + (micro) * 1000LL + (devel))
++#define CWB_LAL_VERSION \
++  CWB_LAL_VERSION_ENCODE(LAL_VERSION_MAJOR, LAL_VERSION_MINOR, \
++                         LAL_VERSION_MICRO, LAL_VERSION_DEVEL)
++#define CWB_LAL_VERSION_GE(major, minor, micro, devel) \
++  (CWB_LAL_VERSION >= CWB_LAL_VERSION_ENCODE(major, minor, micro, devel))
++
++#if CWB_LAL_VERSION_GE(7, 3, 0, 0)
+ #include <lal/LIGOLwXMLRead.h>
+ #else
+ #include <lal/LIGOLwXMLInspiralRead.h>
+ #endif
+-#include <lal/LALConfig.h>
+ #include <lal/LALStdio.h>
+ #include <lal/LALStdlib.h>
+ #include <lal/LALError.h>
+@@ -112,24 +121,17 @@
+ #include <lal/LALStatusMacros.h>
+ #include <lal/LALSimulation.h>
+ #include <lal/LALSimIMR.h>
+-#if LAL_VERSION_MAJOR >   6 || (LAL_VERSION_MAJOR ==  6 && \
+-   (LAL_VERSION_MINOR >  14 || (LAL_VERSION_MINOR == 14 && \
+-    LAL_VERSION_MICRO >=  0                             ))) 	// LAL_VERSION >= 6.14.0
++#if CWB_LAL_VERSION_GE(6, 14, 0, 0)
+ #include <lal/SnglBurstUtils.h>
+ #else
+ #include <lal/LIGOMetadataBurstUtils.h>
+ #endif
+-#if (LAL_VERSION_MAJOR == 7 && LAL_VERSION_MINOR < 3) || \
+-    LAL_VERSION_MAJOR < 7
++#if !CWB_LAL_VERSION_GE(7, 3, 0, 0)
+ #include <lal/LIGOLwXMLBurstRead.h>
+ #endif
+ #include <lal/GenerateBurst.h>
+ #include <lal/LIGOLwXML.h>
+-#if (LAL_VERSION_MAJOR >   6 || (LAL_VERSION_MAJOR ==  6 && \
+-   (LAL_VERSION_MINOR >  19 || (LAL_VERSION_MINOR == 19 && \
+-    LAL_VERSION_MICRO >=  2 )))) && \
+-  ((LAL_VERSION_MAJOR == 7 && LAL_VERSION_MINOR < 3) || \
+-    LAL_VERSION_MAJOR < 7)
++#if CWB_LAL_VERSION_GE(6, 19, 2, 0) && !CWB_LAL_VERSION_GE(7, 3, 0, 0)
+ #include <lal/LIGOLwXMLlegacy.h>
+ #endif
+ 
+-- 
+2.47.3
+
