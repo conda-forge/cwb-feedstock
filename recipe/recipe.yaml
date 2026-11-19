@@ -22,7 +22,18 @@ source:
       then: patches/0003-Install-ROOT-dictionary-PCM-files-under-their-genera.patch
 
 build:
+  files:
+    # Excise files for the cwb-online subpackage
+    # FIXME: this should probably be built into a separate outputs package
+    exclude:
+      - bin/cwb_online*
+      - bin/online*
+      - cwb_online*/
+      - lib/python*/site-packages/
   number: 2
+  python:
+    skip_pyc_compilation:
+      - etc/cwb/*/*.py
   skip:
     - not linux
 
