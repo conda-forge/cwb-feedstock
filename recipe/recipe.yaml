@@ -6,7 +6,7 @@ context:
   tag: ${{ name }}-${{ version }}
 
 package:
-  name: ${{ name|lower }}
+  name: cwb
   version: ${{ version }}
 
 source:
@@ -22,20 +22,35 @@ source:
       then: patches/0003-Install-ROOT-dictionary-PCM-files-under-their-genera.patch
 
 build:
-  number: 1
+  files:
+    # Excise files for the cwb-online subpackage
+    # FIXME: this should probably be built into a separate outputs package
+    exclude:
+      - bin/cwb_online*
+      - bin/online*
+      - cwb_online*/
+      - lib/python*/site-packages/
+  number: 2
+  python:
+    skip_pyc_compilation:
+      - etc/cwb/*/*.py
+    # This is mainly to stop the linter complaining that we require python with a minor version
+    # This package isn't a Python library, but has some scripts that use Python.
+    version_independent: true
   skip:
     - not linux
 
 requirements:
   build:
     - ${{ compiler('c') }}
-    - ${{ stdlib("c") }}
+    - ${{ stdlib('c') }}
     - ${{ compiler('cxx') }}
     - cmake
     - make
     - pkg-config
     - if: build_platform != target_platform
-      then: root_base
+      then:
+        - root_base
   host:
     - healpix_cxx >=3.80
     - libframel
@@ -46,20 +61,27 @@ requirements:
     - root_base
     - root_cxx_standard
   run:
+    - python >=3.10
     - root_base
     - tcsh
-    - uproot <=4.3.7
-    - xgboost <=1.7.6
+    - uproot
+    - xgboost
   run_exports:
     - ${{ pin_subpackage(name|lower, upper_bound='x.x.x') }}
 
 tests:
+  - package_contents:
+      include:
+        - cwb.hh
+      lib:
+        - cwb
   - script:
-      - test -f ${PREFIX}/lib/cwb${SHLIB_EXT}
-      - test -f ${PREFIX}/include/cwb.hh
+      # Check excutables
       - cwb_help
       - cwb_watenv verbose
+      - cwb_xgboost report help
       - ComputeWDMFourier
+      # Check root compatibility
       - root ${CWB_ROOTLOGON_FILE} -e '.q'
 
 about:
