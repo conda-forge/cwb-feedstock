@@ -34,6 +34,9 @@ build:
   python:
     skip_pyc_compilation:
       - etc/cwb/*/*.py
+    # This is mainly to stop the linter complaining that we require python with a minor version
+    # This package isn't a Python library, but has some scripts that use Python.
+    version_independent: true
   skip:
     - not linux
 
@@ -76,6 +79,7 @@ tests:
       # Check excutables
       - cwb_help
       - cwb_watenv verbose
+      - cwb_xgboost report help
       - ComputeWDMFourier
       # Check root compatibility
       - root ${CWB_ROOTLOGON_FILE} -e '.q'
