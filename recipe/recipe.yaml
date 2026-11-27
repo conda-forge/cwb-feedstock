@@ -13,12 +13,12 @@ source:
   sha256: 41585d01111a215f29eb8623e4ade110187d150214c947e965882e50b459fd37
   patches:
     # tools/wavescan is new in 6.4.8.0 and kept the old dictionary pcm install
-    # rule that ROOT 6.40 broke; the other eight were fixed upstream. Not yet
-    # sent upstream.
+    # rule that ROOT 6.40 broke; the other eight were fixed upstream. Fixed
+    # upstream in 356cd123 (after 6.4.8.0): drop it with the next release.
     - patches/0001-Install-the-wavescan-dictionary-pcm-under-either-ROO.patch
 
 build:
-  number: 0
+  number: 1
   skip:
     - not linux
 
@@ -53,6 +53,8 @@ tests:
   - script:
       - test -f ${PREFIX}/lib/cwb${SHLIB_EXT}
       - test -f ${PREFIX}/include/cwb.hh
+      - test "${HOME_CWB}" = "${PREFIX}/etc/cwb"
+      - test -f "${CWB_ROOTLOGON_FILE}"
       - cwb_help
       - cwb_watenv verbose
       - ComputeWDMFourier
