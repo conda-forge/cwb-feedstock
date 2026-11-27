@@ -1,0 +1,515 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Francesco Salemi <francesco.salemi@uniroma1.it>
+Date: Fri, 27 Nov 2026 17:36:06 +0100
+Subject: [PATCH] Build against LAL 8 by dropping the LAL version guards
+
+Backport of the source part of gwburst/public/library!28 (30b512d0) to
+cWB-6.4.8.0: remove the LAL_VERSION guards in tools/cwb/mdc.{cc,hh},
+use XLALSimInspiralGetApproximantFromString, and check in CMake that
+lal >= 7.3, lalmetaio >= 4.0 and lalburst >= 2.0 are found.
+---
+ CMakeLists.txt   |  30 ++++++++
+ tools/cwb/mdc.cc | 184 +----------------------------------------------
+ tools/cwb/mdc.hh |  21 ------
+ 3 files changed, 32 insertions(+), 203 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 8ee58b4e..5935182b 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -97,6 +97,36 @@ endif()
+ #Find LAL
+ pkg_check_modules(LAL IMPORTED_TARGET "lal lalburst lalmetaio lalsimulation")
+ if(${LAL_FOUND})
++     # mdc reads the sim_inspiral and sim_burst tables with the LIGO_LW API of
++     # lalmetaio >= 4.0 (LIGOLwXMLRead.h: XLALSimInspiralTableFromLIGOLw and
++     # XLALSimBurstTableFromLIGOLw without a time range), which replaced the readers of
++     # lalburst < 2.0 and lalinspiral; all of them came with lal 7.3 in lalsuite 7.13.
++     # Fail here rather than inside rootcling. The versions are not put in
++     # pkg_check_modules: an older LAL would then be "not found" and cWB would silently
++     # build without LAL. The modules are passed as one string, so no per-module
++     # version variable is set: query each one on its own.
++     set(CWB_LAL_MIN_VERSIONS lal 7.3 lalmetaio 4.0 lalburst 2.0)
++     set(CWB_LAL_TOO_OLD "")
++     set(CWB_LAL_FOUND_VERSIONS "")
++     list(LENGTH CWB_LAL_MIN_VERSIONS _n)
++     math(EXPR _last "${_n} - 1")
++     foreach(_i RANGE 0 ${_last} 2)
++          math(EXPR _j "${_i} + 1")
++          list(GET CWB_LAL_MIN_VERSIONS ${_i} _mod)
++          list(GET CWB_LAL_MIN_VERSIONS ${_j} _min)
++          pkg_check_modules(CWB_LALMOD_${_mod} QUIET ${_mod})
++          set(_ver "${CWB_LALMOD_${_mod}_VERSION}")
++          list(APPEND CWB_LAL_FOUND_VERSIONS "${_mod} ${_ver}")
++          if(_ver VERSION_LESS _min)
++               list(APPEND CWB_LAL_TOO_OLD "${_mod} ${_ver} (needs >= ${_min})")
++          endif()
++     endforeach()
++     if(CWB_LAL_TOO_OLD)
++          string(REPLACE ";" ", " _msg "${CWB_LAL_TOO_OLD}")
++          message(FATAL_ERROR "cWB needs lalsuite >= 7.13 (lal 7.3, lalmetaio 4.0, lalburst 2.0); too old: ${_msg}")
++     endif()
++     string(REPLACE ";" ", " _msg "${CWB_LAL_FOUND_VERSIONS}")
++     message(STATUS "LAL versions: ${_msg}")
+      list(APPEND CWB_OPTS _USE_LAL)
+ endif()
+ 
+diff --git a/tools/cwb/mdc.cc b/tools/cwb/mdc.cc
+index 93ca2cdc..9e86c9a3 100644
+--- a/tools/cwb/mdc.cc
++++ b/tools/cwb/mdc.cc
+@@ -803,9 +803,6 @@ CWB::mdc::AddWaveform(MDC_TYPE mdc_type, vector<mdcpar> par, TString uname) {
+   } else
+   if(mdc_type==MDC_GA_LAL) {	// use LAL GA waveform 
+ 
+-#if LAL_VERSION_MAJOR >   6 || (LAL_VERSION_MAJOR ==  6 && \
+-   (LAL_VERSION_MINOR >  15 || (LAL_VERSION_MINOR == 15 && \
+-    LAL_VERSION_MICRO >=  0                             )))     // LAL_VERSION >= 6.15.0
+ #ifdef _USE_LAL
+     error=false;
+     double duration = GetPar("duration",par,error);
+@@ -830,10 +827,6 @@ CWB::mdc::AddWaveform(MDC_TYPE mdc_type, vector<mdcpar> par, TString uname) {
+          << "Error : MDC_GA_LAL is enabled only with LAL" << endl;
+     exit(1);
+ #endif
+-#else
+-    cout << "CWB::mdc::AddWaveform - MDC_GA_LAL can not be used with LAL ver < 6.15.0" << endl; 
+-    exit(1);
+-#endif
+ 
+   } else
+   if(mdc_type==MDC_SGE_LAL) {	// use LAL SG waveform 
+@@ -912,9 +905,6 @@ CWB::mdc::AddWaveform(MDC_TYPE mdc_type, vector<mdcpar> par, TString uname) {
+   } else
+   if(mdc_type==MDC_SC_LAL) {	// use LAL cosmic string cusp waveform
+ 
+-#if LAL_VERSION_MAJOR >   6 || (LAL_VERSION_MAJOR ==  6 && \
+-   (LAL_VERSION_MINOR >  15 || (LAL_VERSION_MINOR == 15 && \
+-    LAL_VERSION_MICRO >=  0                             )))     // LAL_VERSION >= 6.15.0
+ #ifdef _USE_LAL
+     error=false;
+     double frequency = GetPar("frequency",par,error);
+@@ -945,10 +935,6 @@ CWB::mdc::AddWaveform(MDC_TYPE mdc_type, vector<mdcpar> par, TString uname) {
+          << "Error : MDC_SC_LAL is enabled only with LAL" << endl;
+     exit(1);
+ #endif
+-#else
+-    cout << "CWB::mdc::AddWaveform - MDC_SC_LAL can not be used with LAL ver < 6.15.0" << endl; 
+-    exit(1);
+-#endif
+ 
+   } else
+   if(mdc_type==MDC_EBBH) {
+@@ -3865,14 +3851,6 @@ CWB::mdc::SetSkyDistribution(MDC_DISTRIBUTION sky_distribution, TString fName, v
+ #ifdef _USE_LAL
+     cout << "CWB::mdc::SetSkyDistribution - User Distribution from XML" << endl;
+ 
+-#if LAL_VERSION_MAJOR >   6 || (LAL_VERSION_MAJOR ==  6 && \
+-   (LAL_VERSION_MINOR >  14 || (LAL_VERSION_MINOR == 14 && \
+-    LAL_VERSION_MICRO >=  0                             )))     // LAL_VERSION >= 6.14.0
+-#else
+-    cout << "CWB::mdc::SetSkyDistribution - LAL XML File can not be used with LAL ver < 6.14.0" << endl; 
+-    exit(1);
+-#endif
+-
+     Long_t id,fsize,flags,mt;
+     int estat = gSystem->GetPathInfo(fName.Data(),&id,&fsize,&flags,&mt);
+     if (estat!=0) {
+@@ -3927,13 +3905,7 @@ CWB::mdc::SetSkyDistribution(MDC_DISTRIBUTION sky_distribution, TString fName, v
+     }
+ 
+     // read sim_burst table from XML file (see LIGOLwXMLBurstRead.c)
+-#if LAL_VERSION_MAJOR >= 7 && LAL_VERSION_MINOR >= 3
+     SimBurst* sim_burst = XLALSimBurstTableFromLIGOLw(fName.Data());
+-#else
+-    LIGOTimeGPS gpsStartTime = {(int)start, 0};
+-    LIGOTimeGPS gpsStopTime  = {(int)stop, 0};
+-    SimBurst* sim_burst = XLALSimBurstTableFromLIGOLw(fName.Data(),&gpsStartTime,&gpsStopTime);
+-#endif
+     if(sim_burst==NULL) { 
+       cout << "CWB::mdc::SetSkyDistribution - XML File : " << fName.Data() << endl;
+       cout << " No Events present in the range : " << (int)start << ":" << (int)stop <<endl;
+@@ -5172,10 +5144,6 @@ CWB::mdc::GetInspiral(wavearray<double>& x, TString ifo) {
+   wat::Time inj_time_shift(inj_shift);
+ 
+   // injections 
+-#if (LAL_VERSION_MAJOR == 7 && LAL_VERSION_MINOR < 3) || \
+-    LAL_VERSION_MAJOR < 7
+-  INT4 numInjections = 0;
+-#endif
+   SimInspiralTable *injections = NULL;
+   TString injectionFile = GenInspiralXML(0., 0., false);                           
+ 
+@@ -5184,7 +5152,6 @@ CWB::mdc::GetInspiral(wavearray<double>& x, TString ifo) {
+ 
+   XLALSetSilentErrorHandler();
+ 
+-#if LAL_VERSION_MAJOR >= 7 && LAL_VERSION_MINOR >= 3
+   // read the injections
+   injections = XLALSimInspiralTableFromLIGOLw(injectionFile.Data());
+ 
+@@ -5243,19 +5210,6 @@ CWB::mdc::GetInspiral(wavearray<double>& x, TString ifo) {
+     }
+   }
+ 
+-#else
+-  // read the injections
+-  numInjections = SimInspiralTableFromLIGOLw(&injections, injectionFile.Data(), gpsStartSec-inj_time_shift.GetSec(), gpsEndSec-inj_time_shift.GetSec());
+-
+-  if ( numInjections == 0 ) {
+-    fprintf( stderr, "CWB::mdc::GetInspiral - Warning : No injections in specified time\n");
+-    return "";
+-  } else {
+-    fprintf( stdout, "CWB::mdc::GetInspiral : Read %d injection(s) from the file '%s'\n",
+-         numInjections, injectionFile.Data() );
+-  }
+-#endif
+-
+ 
+ 
+   // reset lists
+@@ -5295,10 +5249,8 @@ CWB::mdc::GetInspiral(wavearray<double>& x, TString ifo) {
+   SimInspiralTable *thisInj = NULL;
+   for (thisInj = injections; thisInj; thisInj = thisInj->next)
+   {                                                           
+-#if LAL_VERSION_MAJOR >= 7 && LAL_VERSION_MINOR >= 3
+     int epoch = thisInj->geocent_end_time.gpsSeconds;
+     if(epoch<gpsStartSec || epoch>gpsEndSec) continue;	// skip events outside the buffer range
+-#endif
+     // add waveform log string to mdc log string              
+     TString log = GetInspiralLog(inspName,x.start(),thisInj); 
+     //cout << "LOG : " << log.Data() << endl;                 
+@@ -5620,7 +5572,7 @@ CWB::mdc::SetInspiral(TString inspName, TString inspOptions) {
+       stoken = otoken->GetString();
+       cout << "--waveform = " << stoken.Data() << endl;
+       this->waveName=stoken;
+-      if(XLALGetApproximantFromString(stoken.Data()) == XLAL_FAILURE) {
++      if(XLALSimInspiralGetApproximantFromString(stoken.Data()) == XLAL_FAILURE) {
+         cout << "CWB::mdc::SetInspiral - waveform : \'" << stoken.Data() 
+              << "\' not allowed !!!" << endl;
+         exit(1);
+@@ -5875,10 +5827,8 @@ CWB::mdc::FindChirpInjectSignals(wavearray<double>& w, SimInspiralTable *injecti
+   SimInspiralTable *thisInj = NULL;
+   for (thisInj = injections; thisInj; thisInj = thisInj->next)
+   {                                                       
+-#if LAL_VERSION_MAJOR >= 7 && LAL_VERSION_MINOR >= 3
+     int epoch = thisInj->geocent_end_time.gpsSeconds;
+     if(epoch<gpsStartSec || epoch>gpsEndSec) continue;	// skip events outside the buffer range
+-#endif
+     REAL8 deltaT = 1./w.rate();
+     if(waveName!="") strcpy(thisInj->waveform,waveName.Data());
+ 
+@@ -5897,10 +5847,6 @@ CWB::mdc::FindChirpInjectSignals(wavearray<double>& w, SimInspiralTable *injecti
+ */
+     if(approximant==NR_hdf5) {
+ 
+-#if LAL_VERSION_MAJOR >  6 || (LAL_VERSION_MAJOR ==  6 && \
+-   (LAL_VERSION_MINOR > 18 || (LAL_VERSION_MINOR == 18 && \
+-   (LAL_VERSION_MICRO >  0 || (LAL_VERSION_MICRO ==  0 && LAL_VERSION_DEVEL >= 1)))))     // LAL_VERSION >= 6.18.0.1
+-
+       // see LALInferenceReadData.c
+       LALDict *LALpars=XLALCreateDict();
+       XLALSimInspiralWaveformParamsInsertNumRelData(LALpars, thisInj->numrel_data);
+@@ -5968,18 +5914,9 @@ CWB::mdc::FindChirpInjectSignals(wavearray<double>& w, SimInspiralTable *injecti
+              << "check inspiral parameters" << endl;
+         exit(1);
+       }
+-#else
+-      cout << endl << "CWB::mdc::GetInspiral - "
+-           << "Error - NR_hdf5 not supported for LAL_VERSION < 6.18.0.1" << endl;
+-      exit(1);
+-#endif
+ 
+     } else {
+ 
+-#if LAL_VERSION_MAJOR >   6 || (LAL_VERSION_MAJOR ==  6 && \
+-   (LAL_VERSION_MINOR >  16 || (LAL_VERSION_MINOR == 16 && \
+-    LAL_VERSION_MICRO >=  1                             )))     // LAL_VERSION >= 6.16.1
+-
+       // check if source is produced by CWB::mdc::Posterior2XML
+       TString source = TString(thisInj->source);
+       if(source(0,5)=="#CWB:") {
+@@ -5993,33 +5930,8 @@ CWB::mdc::FindChirpInjectSignals(wavearray<double>& w, SimInspiralTable *injecti
+         }
+       }
+ 
+-#if LAL_VERSION_MAJOR == 6 && LAL_VERSION_MINOR == 16 && LAL_VERSION_MICRO == 1	// used only for tagged version lalinference_o2 used for O2 posteriors 
+-
+-      // NOTE: lambda1, lambda2 are provided with xml generated with CWB::mdc::Posterior2XML
+-      //       since there are not dedicated locations in the SimInspiralTable we use alpha,beta
+-      double lambda1 = source(0,5)=="#CWB:" ? thisInj->alpha : 0;
+-      double lambda2 = source(0,5)=="#CWB:" ? thisInj->beta  : 0;
+-
+-      // see LALSimInspiral.c
+-      REAL8 f_min = XLALSimInspiralfLow2fStart(thisInj->f_lower, thisInj->amp_order, approximant);
+-
+-      // get pn order from waveform
+-      int pn_order = XLALSimInspiralGetPNOrderFromString(thisInj->waveform);
+-
+-      // see LALSimInspiral.c
+-      int ret = XLALSimInspiralTD(&hp, &hx, thisInj->coa_phase, deltaT,
+-                                  thisInj->mass1*LAL_MSUN_SI, thisInj->mass2*LAL_MSUN_SI,
+-                                  thisInj->spin1x, thisInj->spin1y, thisInj->spin1z,
+-                                  thisInj->spin2x, thisInj->spin2y, thisInj->spin2z,
+-                                  f_min, thisInj->f_final,
+-                                  thisInj->distance*LAL_PC_SI*1.0e6, 0., thisInj->inclination,
+-                                  lambda1, lambda2, NULL, NULL,
+-                                  thisInj->amp_order, pn_order, approximant);
+-
+-#else
+       // this function is reimplemented in the cWB code, see mdc::XLALInspiralTDWaveformFromSimInspiral
+       int ret = this->XLALInspiralTDWaveformFromSimInspiral(&hp, &hx, thisInj, deltaT); 
+-#endif
+ 
+       if( ret==XLAL_FAILURE ) {
+         cout << endl << "CWB::mdc::GetInspiral - "
+@@ -6027,11 +5939,6 @@ CWB::mdc::FindChirpInjectSignals(wavearray<double>& w, SimInspiralTable *injecti
+              << "check inspiral parameters" << endl;
+         exit(1);
+       }
+-#else
+-      cout << endl << "CWB::mdc::GetInspiral - "
+-           << "Error - LAL_VERSION < 6.16.1 not supported " << endl;
+-      exit(1);
+-#endif
+ 
+     }
+ 
+@@ -6135,10 +6042,6 @@ CWB::mdc::GetInspiral(TString pol, int gps_start_time, int gps_end_time) {
+   wat::Time inj_time_shift(inj_shift);
+ 
+   // injections 
+-#if (LAL_VERSION_MAJOR == 7 && LAL_VERSION_MINOR < 3) || \
+-    LAL_VERSION_MAJOR < 7
+-  INT4 numInjections = 0;
+-#endif
+   SimInspiralTable *injections = NULL;
+   TString injectionFile = GenInspiralXML(0., 0., false);                           
+ 
+@@ -6147,7 +6050,6 @@ CWB::mdc::GetInspiral(TString pol, int gps_start_time, int gps_end_time) {
+ 
+   XLALSetSilentErrorHandler();
+ 
+-#if LAL_VERSION_MAJOR >= 7 && LAL_VERSION_MINOR >= 3
+   // read the injections
+   injections = XLALSimInspiralTableFromLIGOLw(injectionFile.Data());
+ 
+@@ -6205,18 +6107,6 @@ CWB::mdc::GetInspiral(TString pol, int gps_start_time, int gps_end_time) {
+       injections = injections_selected_first;
+     }
+   }
+-#else
+-  // read the injections
+-  numInjections = SimInspiralTableFromLIGOLw(&injections, injectionFile.Data(), gpsStartSec-inj_time_shift.GetSec(), gpsEndSec-inj_time_shift.GetSec());
+-
+-  if ( numInjections == 0 ) {
+-    fprintf( stderr, "CWB::mdc::GetInspiral - Warning : No injections in specified time\n");
+-    return w;
+-  } else {
+-    fprintf( stdout, "CWB::mdc::GetInspiral : Read %d injection(s) from the file '%s'\n",
+-         numInjections, injectionFile.Data() );
+-  }
+-#endif
+ 
+   REAL8TimeSeries *hp=NULL;
+   REAL8TimeSeries *hx=NULL;
+@@ -6266,10 +6156,6 @@ CWB::mdc::GetInspiral(TString pol, int gps_start_time, int gps_end_time) {
+ */
+     if(approximant==NR_hdf5) {
+ 
+-#if LAL_VERSION_MAJOR >  6 || (LAL_VERSION_MAJOR ==  6 && \
+-   (LAL_VERSION_MINOR > 18 || (LAL_VERSION_MINOR == 18 && \
+-   (LAL_VERSION_MICRO >  0 || (LAL_VERSION_MICRO ==  0 && LAL_VERSION_DEVEL >= 1)))))     // LAL_VERSION >= 6.18.0.1
+-
+       // see LALInferenceReadData.c
+       LALDict *LALpars=XLALCreateDict();
+       XLALSimInspiralWaveformParamsInsertNumRelData(LALpars, thisInj->numrel_data);
+@@ -6338,18 +6224,9 @@ CWB::mdc::GetInspiral(TString pol, int gps_start_time, int gps_end_time) {
+              << "check inspiral parameters" << endl;
+         exit(1);
+       }
+-#else
+-      cout << endl << "CWB::mdc::GetInspiral - "
+-           << "Error - NR_hdf5 not supported for LAL_VERSION < 6.18.0.1" << endl;
+-      exit(1);
+-#endif
+ 
+     } else {
+ 
+-#if LAL_VERSION_MAJOR >   6 || (LAL_VERSION_MAJOR ==  6 && \
+-   (LAL_VERSION_MINOR >  16 || (LAL_VERSION_MINOR == 16 && \
+-    LAL_VERSION_MICRO >=  1                             )))     // LAL_VERSION >= 6.16.1
+-
+       // check if source is produced by CWB::mdc::Posterior2XML
+       TString source = TString(thisInj->source);
+       if(source(0,5)=="#CWB:") {
+@@ -6363,33 +6240,8 @@ CWB::mdc::GetInspiral(TString pol, int gps_start_time, int gps_end_time) {
+         }
+       }
+ 
+-#if LAL_VERSION_MAJOR == 6 && LAL_VERSION_MINOR == 16 && LAL_VERSION_MICRO == 1	// used only for tagged version lalinference_o2 used for O2 posteriors 
+-
+-      // NOTE: lambda1, lambda2 are provided with xml generated with CWB::mdc::Posterior2XML
+-      //       since there are not dedicated locations in the SimInspiralTable we use alpha,beta
+-      double lambda1 = source(0,5)=="#CWB:" ? thisInj->alpha : 0;
+-      double lambda2 = source(0,5)=="#CWB:" ? thisInj->beta  : 0;
+-
+-      // see LALSimInspiral.c
+-      REAL8 f_min = XLALSimInspiralfLow2fStart(thisInj->f_lower, thisInj->amp_order, approximant);
+-
+-      // get pn order from waveform
+-      int pn_order = XLALSimInspiralGetPNOrderFromString(thisInj->waveform);
+-
+-      // see LALSimInspiral.c
+-      int ret = XLALSimInspiralTD(&hp, &hx, thisInj->coa_phase, deltaT,
+-                                  thisInj->mass1*LAL_MSUN_SI, thisInj->mass2*LAL_MSUN_SI,
+-                                  thisInj->spin1x, thisInj->spin1y, thisInj->spin1z,
+-                                  thisInj->spin2x, thisInj->spin2y, thisInj->spin2z,
+-                                  f_min, thisInj->f_final,
+-                                  thisInj->distance*LAL_PC_SI*1.0e6, 0., thisInj->inclination,
+-                                  lambda1, lambda2, NULL, NULL,
+-                                  thisInj->amp_order, pn_order, approximant);
+-
+-#else
+       // this function is reimplemented in the cWB code, see mdc::XLALInspiralTDWaveformFromSimInspiral
+       int ret = this->XLALInspiralTDWaveformFromSimInspiral(&hp, &hx, thisInj, deltaT); 
+-#endif
+ 
+       if( ret==XLAL_FAILURE ) {
+         cout << endl << "CWB::mdc::GetInspiral - "
+@@ -6397,11 +6249,6 @@ CWB::mdc::GetInspiral(TString pol, int gps_start_time, int gps_end_time) {
+              << "check inspiral parameters" << endl;
+         exit(1);
+       }
+-#else
+-      cout << endl << "CWB::mdc::GetInspiral - "
+-           << "Error - LAL_VERSION < 6.16.1 not supported " << endl;
+-      exit(1);
+-#endif
+ 
+     }
+ 
+@@ -6469,7 +6316,6 @@ CWB::mdc::XLALInspiralTDWaveformFromSimInspiral(
+     REAL8 deltaT                /**< time step (s) */
+     )
+ {
+-#if !(LAL_VERSION_MAJOR == 6 && LAL_VERSION_MINOR == 16 && LAL_VERSION_MICRO == 1) // not used for tagged version lalinference_o2 used for O2 posteriors
+    int ret;
+    LALPNOrder order;
+    Approximant approximant;
+@@ -6588,8 +6434,7 @@ CWB::mdc::XLALInspiralTDWaveformFromSimInspiral(
+    if( ret == XLAL_FAILURE )
+      XLAL_ERROR(XLAL_EFUNC);
+ #endif
+-#endif	// endif lalinference_o2 
+-#endif 
++#endif	// NEW_CODE_FOR_SEOBNRv4P_AND_SEOBNRv4PHM
+ 
+    return XLAL_SUCCESS;
+ }
+@@ -6942,12 +6787,7 @@ CWB::mdc::Posterior2XML(TString sampleFile, TString xmlFile, TString options) {
+   }
+ 
+   static LALStatus status;
+-#if LAL_VERSION_MAJOR >= 7 && LAL_VERSION_MINOR >= 3
+   LIGOLwXMLStream  *xmlfp;
+-#else
+-  LIGOLwXMLStream  xmlfp;
+-  MetadataTable    injections;
+-#endif
+   SimInspiralTable *simTable;                                   // see lalsuite include/lal/LIGOMetadataTables.h
+ 
+   gps_start_time = int(gps_start_time/time_step)*time_step;     // force gps_start_time to be an multiple of time_step
+@@ -6958,12 +6798,8 @@ CWB::mdc::Posterior2XML(TString sampleFile, TString xmlFile, TString options) {
+   wat::Time timeStep(time_step);
+ 
+   // create the first injection 
+-#if LAL_VERSION_MAJOR >= 7 && LAL_VERSION_MINOR >= 3
+   SimInspiralTable *injections;                                 // see lalsuite include/lal/LIGOMetadataTables.h
+   simTable = injections = (SimInspiralTable *) calloc( 1, sizeof(SimInspiralTable) );
+-#else
+-  simTable = injections.simInspiralTable = (SimInspiralTable *) calloc( 1, sizeof(SimInspiralTable) );
+-#endif
+ 
+ //  if(seed>=0) gRandom->SetSeed(abs(seed));
+   TRandom3 random(abs(seed));
+@@ -7143,22 +6979,11 @@ CWB::mdc::Posterior2XML(TString sampleFile, TString xmlFile, TString options) {
+   if(clb_file!="") clb.close();
+ 
+   // write xml file
+-#if LAL_VERSION_MAJOR >= 7 && LAL_VERSION_MINOR >= 3
+   xmlfp = XLALOpenLIGOLwXMLFile( xmlFile.Data() );
+   if(simTable) {
+     XLALWriteLIGOLwXMLSimInspiralTable( xmlfp, injections);
+   }
+   XLALCloseLIGOLwXMLFile ( xmlfp );
+-#else
+-  memset( &xmlfp, 0, sizeof(LIGOLwXMLStream) );
+-  LAL_CALL( LALOpenLIGOLwXMLFile( &status, &xmlfp, xmlFile.Data() ), &status );
+-  if(injections.simInspiralTable) {
+-    LAL_CALL( LALBeginLIGOLwXMLTable( &status, &xmlfp, sim_inspiral_table ), &status );
+-    LAL_CALL( LALWriteLIGOLwXMLTable( &status, &xmlfp, injections, sim_inspiral_table ), &status );
+-    LAL_CALL( LALEndLIGOLwXMLTable ( &status, &xmlfp ), &status );
+-  }
+-  LAL_CALL( LALCloseLIGOLwXMLFile ( &status, &xmlfp ), &status );
+-#endif
+   LALCheckMemoryLeaks();
+   cout << endl << "CWB::mdc::Posterior2XML - "
+        << "Write\t" << ninj << "\tsamples to output xml file" << endl;
+@@ -7313,13 +7138,8 @@ CWB::mdc::GetPsample(std::map<TString, int> hsample, vector<double> sample, floa
+     // routines for transforming initial conditions of precessing waveforms 
+     // include/lal/LALSimInspiral.h
+     double phiRef=phase;
+-#if LAL_VERSION_MAJOR == 6 && LAL_VERSION_MINOR == 16 && LAL_VERSION_MICRO == 1	// used only for tagged version lalinference_o2 used for O2 posteriors 
+-    int ret = XLALSimInspiralTransformPrecessingNewInitialConditions(&iota, &s1x, &s1y, &s1z, &s2x, &s2y, &s2z, theta_jn, 
+-                                                                     phi_jl, tilt1, tilt2, phi12, a1, a2, m1*LAL_MSUN_SI, m2*LAL_MSUN_SI, f_ref);      // version used by ben farr
+-#else
+     int ret = XLALSimInspiralTransformPrecessingNewInitialConditions(&iota, &s1x, &s1y, &s1z, &s2x, &s2y, &s2z, theta_jn, 
+                                                                      phi_jl, tilt1, tilt2, phi12, a1, a2, m1*LAL_MSUN_SI, m2*LAL_MSUN_SI, f_ref, phiRef);     // new version
+-#endif
+     if( ret==XLAL_FAILURE ) {
+       cout << endl << "CWB::mdc::Posterior2XML - "
+            << "Error in XLALSimInspiralTransformPrecessingNewInitialConditions" << endl;
+diff --git a/tools/cwb/mdc.hh b/tools/cwb/mdc.hh
+index 45a600ed..e57b63c2 100644
+--- a/tools/cwb/mdc.hh
++++ b/tools/cwb/mdc.hh
+@@ -82,11 +82,7 @@
+ // by ROOT or other packages and it forbid to LAL to include Random.h 
+ #undef _RANDOM_H        
+ 
+-#if LAL_VERSION_MAJOR >= 7 && LAL_VERSION_MINOR >= 3
+ #include <lal/LIGOLwXMLRead.h>
+-#else
+-#include <lal/LIGOLwXMLInspiralRead.h>
+-#endif
+ #include <lal/LALConfig.h>
+ #include <lal/LALStdio.h>
+ #include <lal/LALStdlib.h>
+@@ -110,26 +106,9 @@
+ #include <lal/LALStatusMacros.h>
+ #include <lal/LALSimulation.h>
+ #include <lal/LALSimIMR.h>
+-#if LAL_VERSION_MAJOR >   6 || (LAL_VERSION_MAJOR ==  6 && \
+-   (LAL_VERSION_MINOR >  14 || (LAL_VERSION_MINOR == 14 && \
+-    LAL_VERSION_MICRO >=  0                             ))) 	// LAL_VERSION >= 6.14.0
+ #include <lal/SnglBurstUtils.h>
+-#else
+-#include <lal/LIGOMetadataBurstUtils.h>
+-#endif
+-#if (LAL_VERSION_MAJOR == 7 && LAL_VERSION_MINOR < 3) || \
+-    LAL_VERSION_MAJOR < 7
+-#include <lal/LIGOLwXMLBurstRead.h>
+-#endif
+ #include <lal/GenerateBurst.h>
+ #include <lal/LIGOLwXML.h>
+-#if (LAL_VERSION_MAJOR >   6 || (LAL_VERSION_MAJOR ==  6 && \
+-   (LAL_VERSION_MINOR >  19 || (LAL_VERSION_MINOR == 19 && \
+-    LAL_VERSION_MICRO >=  2 )))) && \
+-  ((LAL_VERSION_MAJOR == 7 && LAL_VERSION_MINOR < 3) || \
+-    LAL_VERSION_MAJOR < 7)
+-#include <lal/LIGOLwXMLlegacy.h>
+-#endif
+ 
+ #endif
+ 

@@ -16,6 +16,10 @@ source:
     # rule that ROOT 6.40 broke; the other eight were fixed upstream. Fixed
     # upstream in 356cd123 (after 6.4.8.0): drop it with the next release.
     - patches/0001-Install-the-wavescan-dictionary-pcm-under-either-ROO.patch
+    # LAL 8 (lal 8.0, lalmetaio 4.1, lalburst 3.0) removed the headers and
+    # functions behind the LAL_VERSION guards in tools/cwb/mdc.*: backport of
+    # gwburst/public/library!28 (30b512d0), drop it with the next release.
+    - patches/0002-Build-against-LAL-8-by-dropping-the-LAL-version-guar.patch
 
 build:
   number: 1
@@ -35,9 +39,9 @@ requirements:
   host:
     - healpix_cxx >=3.80
     - libframel
-    - liblal
-    - liblalburst
-    - liblalmetaio
+    - liblal >=7.3
+    - liblalburst >=2.0
+    - liblalmetaio >=4.0
     - liblalsimulation
     - root_base
     - root_cxx_standard
